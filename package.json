@@ -3,7 +3,10 @@
 		"onLanguage:lua"
 	],
 	"author": "HarukaTea",
-	"repository": "https://github.com/HarukaTea/Miliastra-Lua-Lsp",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/eterlan/Miliastra-Lua-Lsp.git"
+	},
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"description": "",
@@ -1134,6 +1137,7 @@
 	"license": "MIT",
 	"main": "./client/out/extension",
 	"name": "miliastraLsp",
-	"publisher": "HarukaTea",
-	"version": "0.0.7"
+	"displayName": "千星奇域 Lua LSP (macOS ARM64)",
+	"publisher": "eterlan",
+	"version": "0.0.8"
 }
