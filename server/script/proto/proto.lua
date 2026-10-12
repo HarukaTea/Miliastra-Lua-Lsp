@@ -160,8 +160,10 @@ function m.doResponse(proto)
 end
 
 function m.listen()
-    subprocess.filemode(io.stdin,  'b')
-    subprocess.filemode(io.stdout, 'b')
+    if subprocess.filemode then
+        subprocess.filemode(io.stdin,  'b')
+        subprocess.filemode(io.stdout, 'b')
+    end
     io.stdin:setvbuf  'no'
     io.stdout:setvbuf 'no'
     pub.task('loadProto')

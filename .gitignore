@@ -1,5 +1,7 @@
 /server/log
-/server/bin
+/server/bin/*
+!/server/bin/macOS/
+!/server/bin/macOS/**
 /server/script/output.lua
 /client/node_modules
 /client/out/*.map
