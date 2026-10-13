@@ -87,7 +87,9 @@ npm run watch     # 监听模式
 server/bin/{Windows,Linux,macOS}/lua-language-server -E server/main.lua
 ```
 
-> `server/bin` 目录已被 `.gitignore` 忽略，仓库中不包含平台二进制，需要自行准备与平台匹配的 `lua-language-server` 可执行文件。
+> 除 macOS arm64 以外，`server/bin` 下的平台目录仍由 `.gitignore` 忽略，需要自行准备匹配的可执行文件及其 `main.lua` 引导器。此 fork 提交了 `server/bin/macOS` 下的 arm64 运行时，来源为 LuaLS 3.13.6 官方发行包；Intel Mac 不包含在内。
+
+macOS arm64 运行时来源：<https://github.com/LuaLS/lua-language-server/releases/tag/3.13.6>。归档 `lua-language-server-3.13.6-darwin-arm64.tar.gz` 的 SHA-256：`e2cbe217a155ceb952dbf7fed544be212a3ce8315dde317c617b5002d29fe596`。该运行时与当前服务端源码使用的 `bee` API 兼容；macOS 不提供 `subprocess.filemode`，所以协议层仅在 API 存在的平台调用它。
 
 ### ⚠️ `server/bin/<平台>/main.lua` 是必需的引导器，切勿删除
 
