@@ -1138,6 +1138,6 @@
 	"main": "./client/out/extension",
 	"name": "miliastraLsp",
 	"displayName": "千星奇域 Lua LSP (macOS ARM64)",
-	"publisher": "eterlan",
+	"publisher": "HarukaTea",
 	"version": "0.0.8"
 }
