@@ -40,24 +40,7 @@ MLSP/
 ├── syntaxes/lua.tmLanguage.json # TextMate 语法高亮
 ├── language-configuration.json  # 括号、注释、缩进规则
 ├── images/logo.png              # 扩展图标
-├── docs/                        # API 文档站（独立子包，见下）
-│   ├── package.json             # VitePress 工程（与扩展包完全隔离）
-│   ├── .vitepress/
-│   │   ├── config.mts           # 站点配置（注册主题、读取 sidebar.json）
-│   │   ├── sidebar.json         # 由生成脚本产出
-│   │   └── theme/               # 自定义主题：仅覆盖配色
-│   ├── public/logo.svg          # 站点图标（取自改造前的单页）
-│   ├── scripts/
-│   │   ├── api-data.json        # API 数据源（生成流程的唯一输入）
-│   │   ├── snapshot-api.mjs     # 从历史 HTML 抽取 → api-data.json
-│   │   ├── extract-api.mjs      # 读取数据 + 锚点算法
-│   │   ├── build-api-docs.mjs   # 生成 Markdown 页面与侧边栏
-│   │   ├── verify-docs.mjs      # 校验链接 / 锚点
-│   │   └── verify-integration.mjs # 校验与扩展包的隔离
-│   ├── api/                     # 生成的 Markdown（已 gitignore）
-│   ├── index.md                 # 站点首页
-│   └── Snipaste_*.png           # README 截图
-├── .github/workflows/deploy-docs.yml  # 自动部署文档站到 GitHub Pages
+├── images/preview.png           # README 预览截图
 ├── package.json                 # 扩展清单与 54 项配置声明
 └── package.nls.json             # 配置项文案（中文）
 ```
@@ -124,56 +107,6 @@ lua-language-server.exe: cannot open ...\server\bin\Windows\main.lua: No such fi
 
 2. 在 VS Code 中打开 `server/` 目录，使用 `server/.vscode/launch.json` 中的 **附加** 配置连接调试器。默认地址为 `127.0.0.1:11413`，需要与上面的 `debuggerPort` 保持一致。
 
-## API 文档站
-
-`docs/` 是一个**独立的 VitePress 子包**，有自己的 `package.json`。之所以不把 VitePress 放进根 `package.json`，是因为根清单同时是 VS Code 扩展清单，`vsce` 对 `engines`、`main`、`contributes` 等字段有严格校验，混入文档依赖会污染扩展包。
-
-```bash
-cd docs
-npm install
-npm run dev      # 本地预览
-npm run build    # 构建到 docs/.vitepress/dist
-npm run gen      # 仅重新生成 Markdown
-```
-
-### 文档内容从哪来
-
-`docs/api/` 下的 Markdown **全部由脚本生成，不要手改**。数据源是 `docs/scripts/api-data.json`：
-
-```
-docs/scripts/api-data.json          ← 唯一数据源，改 API 直接改这里
-  └─ scripts/extract-api.mjs          读取数据 + 提供与 VitePress 一致的锚点算法
-       └─ scripts/build-api-docs.mjs  渲染为 Markdown + .vitepress/sidebar.json
-```
-
-改了数据后重新生成即可：
-
-```bash
-cd docs && npm run gen
-```
-
-> `api-data.json` 最初由 `scripts/snapshot-api.mjs` 从改造前的单文件 HTML（`api-reference.html`）抽取而来。
-> 该 HTML 已按计划删除，`snapshot-api.mjs` 仅作为历史工具保留——若将来又拿到新版 HTML，可用它重新生成快照。
-
-`docs/api/` 与 `.vitepress/sidebar.json` 已加入 `docs/.gitignore`，不入库以免产生噪音 diff；克隆后跑一次 `npm run gen` 就会重建。
-
-### 校验
-
-```bash
-cd docs && npm run verify
-```
-
-会检查侧边栏与 Markdown 里的全部内部链接、锚点是否可解析、锚点有无重复，并确认文档子包没有污染扩展清单。**改了生成逻辑后务必跑一次**——这类批量生成最容易出两类问题：
-
-- **锚点重复**：例如每个类都输出 `### 属性`，就会产生 19 个同名锚点。现在改为 `### <类名> 属性`。
-- **锚点与 VitePress 不一致**：方法标题用显式 `{#...}` 锚点，由 `extract-api.mjs` 的 `anchorOf()` 生成。该函数必须与 VitePress 的 slugify 保持一致（**先小写**、去除非 `\w` 字符、空格转连字符），否则深链接会静默失效。
-
-### 自动部署
-
-`.github/workflows/deploy-docs.yml` 会在 `docs/**` 变更推送到主分支时，自动构建并发布到 GitHub Pages。
-
-首次启用需要在仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。工作流里已用 `configure-pages` 输出的 `base_path` 覆盖 `--base`，因此部署在 `https://<user>.github.io/<repo>/` 子路径下也能正确加载资源。
-
 ## 打包
 
 ```bash
@@ -195,10 +128,6 @@ npx vsce package
 - **服务端诊断默认值的唯一来源是 `proto/define.lua`**：`package.json` 中 `diagnostics.severity`、`diagnostics.neededFileStatus` 的 `default` 仅用于设置界面展示与实际行为保持一致，**修改默认级别请改 `define.lua`**，并同步 `package.json` 以免界面上显示的默认值与实际不符。
 
 - **`package.nls.json` 用中文**：仓库不提供 `package.nls.en.json`，因此 VS Code 在任何语言下都会读取这份中文文案。新增配置项时记得补上对应条目（键名必须与 `package.json` 中的 `%占位符%` 完全一致）。
-
-## 相关文档
-
-- API 文档站源码：[docs/](docs/)（VitePress，见上文「API 文档站」）
 
 ## 致谢
 

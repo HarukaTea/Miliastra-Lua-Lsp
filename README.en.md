@@ -4,7 +4,7 @@
 
 A Visual Studio Code extension for scripting in *Genshin Impact*'s **Miliastra Wonderland** (千星奇域). It brings full code intelligence — completion, hover, navigation and diagnostics — and ships with the Miliastra runtime API built in.
 
-![Preview](docs/Snipaste_2026-09-23_21-31-32.png)
+![Preview](images/preview.png)
 
 ## Features
 
@@ -166,16 +166,6 @@ Set `miliastraLsp.diagnostics.neededFileStatus` to `Opened` for the rules you ca
         "unused-function": "Opened"
     }
 }
-```
-
-## Documentation
-
-The full API reference lives in `docs/` and is built with VitePress:
-
-```bash
-cd docs
-npm install
-npm run dev      # preview at http://localhost:5173
 ```
 
 ## Contributing

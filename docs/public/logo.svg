@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" role="img" aria-label="千星奇域 Lua API">
-  <circle cx="14" cy="14" r="3.2" fill="#087ea4"/>
-  <ellipse cx="14" cy="14" rx="12" ry="4.8" fill="none" stroke="#087ea4" stroke-width="1.6"/>
-  <ellipse cx="14" cy="14" rx="12" ry="4.8" fill="none" stroke="#087ea4" stroke-width="1.6" transform="rotate(60 14 14)"/>
-  <ellipse cx="14" cy="14" rx="12" ry="4.8" fill="none" stroke="#087ea4" stroke-width="1.6" transform="rotate(120 14 14)"/>
-</svg>

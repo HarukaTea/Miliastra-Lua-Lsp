@@ -4,7 +4,7 @@
 
 为原神千星奇域Lua脚本开发打造的 Visual Studio Code 扩展，提供补全、悬停提示、跳转、诊断等完整的代码智能功能，并内置千星奇域运行时 API。
 
-![预览](docs/Snipaste_2026-09-23_21-31-32.png)
+![预览](images/preview.png)
 
 ## 功能
 
@@ -166,16 +166,6 @@ code --install-extension miliastraLsp-0.0.3.vsix
         "unused-function": "Opened"
     }
 }
-```
-
-## 相关文档
-
-完整的 API 参考文档位于 `docs/`，基于 VitePress 构建：
-
-```bash
-cd docs
-npm install
-npm run dev      # 本地预览 http://localhost:5173
 ```
 
 ## 参与开发
