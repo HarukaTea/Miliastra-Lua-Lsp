@@ -12,9 +12,6 @@ local Forcing
 local function askForcing(str)
     -- TODO 总是可以替换
     do return true end
-    if TEST then
-        return true
-    end
     if Forcing ~= nil then
         return Forcing
     end
@@ -56,9 +53,6 @@ end
 local function askForMultiChange(results, newname)
     -- TODO 总是可以替换
     do return true end
-    if TEST then
-        return true
-    end
     local uris = {}
     for _, result in ipairs(results) do
         local uri = result.uri

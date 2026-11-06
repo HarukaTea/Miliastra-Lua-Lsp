@@ -16,8 +16,7 @@
         "ID",
         "DEVELOP",
         "DBGPORT",
-        "DBGWAIT",
-        "TEST"
+        "DBGWAIT"
     ],
     "Lua.hover.previewFields": 10,
     "Lua.diagnostics.disable": [

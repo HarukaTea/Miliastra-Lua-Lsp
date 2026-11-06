@@ -4261,9 +4261,6 @@ function m.searchSameFields(status, simple, mode)
         max = max + 1
         status.share.count = status.share.count + 1
         if status.share.count % 10000 == 0 then
-            --if TEST then
-            --    print('####', status.share.count, osClock() - status.clock)
-            --end
             if status.interface and status.interface.pulse then
                 status.interface.pulse()
             end

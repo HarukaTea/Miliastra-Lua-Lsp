@@ -1,48 +1,9 @@
 local sp         = require 'bee.subprocess'
 local nonil      = require 'without-check-nil'
 local client     = require 'provider.client'
-local platform   = require 'bee.platform'
 local completion = require 'provider.completion'
 
 local m = {}
-
-local function testFileEvents(initer)
-    initer.fileOperations = {
-        didCreate = {
-            filters = {
-                {
-                    pattern = {
-                        glob = '**',
-                        --matches = 'file',
-                        options = platform.OS == 'Windows',
-                    }
-                }
-            }
-        },
-        didDelete = {
-            filters = {
-                {
-                    pattern = {
-                        glob = '**',
-                        --matches = 'file',
-                        options = platform.OS == 'Windows',
-                    }
-                }
-            }
-        },
-        didRename = {
-            filters = {
-                {
-                    pattern = {
-                        glob = '**',
-                        --matches = 'file',
-                        options = platform.OS == 'Windows',
-                    }
-                }
-            }
-        },
-    }
-end
 
 function m.getIniter()
     local initer = {
@@ -95,8 +56,6 @@ function m.getIniter()
         --    firstTriggerCharacter = '}',
         --},
     }
-
-    --testFileEvents()
 
     nonil.enable()
     if not client.info.capabilities.textDocument.completion.dynamicRegistration then
