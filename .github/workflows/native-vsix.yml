@@ -1,7 +1,7 @@
 name: Native VSIX
 on:
   push:
-    branches: [luau-lsp]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
