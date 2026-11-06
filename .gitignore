@@ -1,8 +1,10 @@
-/server/log
-/server/bin/*
-!/server/bin/macOS/
-!/server/bin/macOS/**
-/server/script/output.lua
-/client/node_modules
+/node_modules/
+/client/node_modules/
 /client/out/*.map
+/.build/
+/server/native/
+/server/bin/
+/server/log/
+/server/script/output.lua
+/*.vsix
 TODO-LIST

@@ -1,0 +1,246 @@
+diff --git a/Analysis/src/TableLiteralInference.cpp b/Analysis/src/TableLiteralInference.cpp
+index 2ff50e2..757d592 100644
+--- a/Analysis/src/TableLiteralInference.cpp
++++ b/Analysis/src/TableLiteralInference.cpp
+@@ -1,3 +1,4 @@
++#include <cmath>
+ // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+ 
+ #include "Luau/TableLiteralInference.h"
+diff --git a/Ast/include/Luau/Parser.h b/Ast/include/Luau/Parser.h
+index 15ff0ee..611ee4c 100644
+--- a/Ast/include/Luau/Parser.h
++++ b/Ast/include/Luau/Parser.h
+@@ -221,6 +221,16 @@ private:
+     );
+ 
+     // var [`+=' | `-=' | `*=' | `/=' | `%=' | `^=' | `..='] exp
++    struct BitOperator
++    {
++        const char* function;
++        unsigned int precedence;
++        bool twoTokens;
++        bool assignment;
++    };
++    BitOperator bitOperator();
++    bool isExplicitTypeCall(const Position& calleeEnd) const;
++    AstExpr* makeBitCall(const Location& op, const char* function, AstExpr* lhs, AstExpr* rhs);
+     AstStat* parseCompoundAssignment(AstExpr* initial, AstExprBinary::Op op);
+ 
+     std::pair<AstLocal*, AstArray<AstLocal*>> prepareFunctionArguments(const Location& start, bool hasself, const TempVector<Binding>& args);
+@@ -535,6 +545,7 @@ private:
+ 
+     ParseOptions options;
+ 
++    AstNameTable& names;
+     Lexer lexer;
+     Allocator& allocator;
+ 
+diff --git a/Ast/src/Parser.cpp b/Ast/src/Parser.cpp
+index 9aba25a..6ee66a2 100644
+--- a/Ast/src/Parser.cpp
++++ b/Ast/src/Parser.cpp
+@@ -311,6 +311,7 @@ ParseNodeResult<AstType> Parser::parseType(const char* buffer, size_t bufferSize
+ 
+ Parser::Parser(const char* buffer, size_t bufferSize, AstNameTable& names, Allocator& allocator, const ParseOptions& options)
+     : options(options)
++    , names(names)
+     , lexer(buffer, bufferSize, names, options.parseFragment ? options.parseFragment->resumePosition : Position(0, 0))
+     , allocator(allocator)
+     , recursionCounter(0)
+@@ -485,6 +486,17 @@ AstStat* Parser::parseStat()
+         return parseAssignment(expr);
+ 
+     // if the next token is a compound assignment operator, it's a compound assignment (these don't support multiple variables)
++    if (auto bit = bitOperator(); bit.assignment)
++    {
++        if (!isExprLValue(expr))
++            expr = reportLValueError(expr);
++        Location op = lexer.current().location;
++        nextLexeme();
++        op.end = lexer.current().location.end;
++        nextLexeme();
++        AstExpr* value = makeBitCall(op, bit.function, expr, parseExpr());
++        return allocator.alloc<AstStatAssign>(value->location, copy({expr}), copy({value}));
++    }
+     if (std::optional<AstExprBinary::Op> op = parseCompoundOp(lexer.current()))
+         return parseCompoundAssignment(expr, *op);
+ 
+@@ -3541,6 +3553,65 @@ std::optional<AstExprUnary::Op> Parser::parseUnaryOp(const Lexeme& l)
+         return std::nullopt;
+ }
+ 
++// Recognize shifts only in expressions. Keep the lexer unchanged so nested
++// generic types (A<B<C>>) and union/intersection annotations retain their tokens.
++Parser::BitOperator Parser::bitOperator()
++{
++    const Lexeme& token = lexer.current();
++    const auto ch = token.type;
++    if (ch == '~')
++        return {"bxor", 5, false, false};
++    if (ch != '&' && ch != '|' && ch != '<' && ch != '>')
++        return {};
++    const auto next = lexer.lookahead();
++    const bool adjacent = token.location.end == next.location.begin;
++    if (ch == '<' || ch == '>')
++    {
++        bool assign = next.type == (ch == '<' ? Lexeme::LessEqual : Lexeme::GreaterEqual);
++        if (adjacent && (next.type == ch || assign))
++            return {ch == '<' ? "lshift" : "rshift", 7, true, assign};
++        return {};
++    }
++    if (adjacent && next.type == ch)
++        return {}; // preserve the normal diagnostic for && and ||
++    bool assign = adjacent && next.type == '=';
++    return {ch == '&' ? "band" : "bor", ch == '&' ? 6u : 4u, assign, assign};
++}
++
++// Adjacent f<<T>>(...) is an explicit Luau type application. Look ahead only
++// when the first token could start a type; ordinary numeric shifts take the fast path.
++bool Parser::isExplicitTypeCall(const Position& calleeEnd) const
++{
++    if (lexer.current().type != '<' || calleeEnd != lexer.current().location.begin)
++        return false;
++    Lexer probe = lexer;
++    if (probe.next().type != '<')
++        return false;
++    unsigned int depth = 2;
++    for (;;)
++    {
++        const auto& token = probe.next();
++        if (token.type == '<')
++            ++depth;
++        else if (token.type == '>' && --depth == 0)
++            return probe.next().type == '(';
++        else if (token.type == Lexeme::Eof || token.type == Lexeme::Number || token.type == '=' ||
++                 token.type == ';' || token.type == Lexeme::ReservedLocal || token.type == Lexeme::ReservedReturn)
++            return false;
++    }
++}
++
++// This server analyzes game code; it never executes the rewritten AST.
++// Keep both operands at their actual positions for diagnostics and navigation.
++AstExpr* Parser::makeBitCall(const Location& op, const char* function, AstExpr* lhs, AstExpr* rhs)
++{
++    auto base = allocator.alloc<AstExprGlobal>(op, names.getOrAdd("bit32"));
++    auto callee = allocator.alloc<AstExprIndexName>(op, base, names.getOrAdd(function), op, op.begin, '.');
++    auto args = lhs ? copy({lhs, rhs}) : copy({rhs});
++    Location location(lhs ? lhs->location.begin : op.begin, rhs->location.end);
++    return allocator.alloc<AstExprCall>(location, callee, args, false, AstArray<AstTypeOrPack>{}, location);
++}
++
+ std::optional<AstExprBinary::Op> Parser::parseBinaryOp(const Lexeme& l)
+ {
+     if (l.type == '+')
+@@ -3661,14 +3732,14 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
+ AstExpr* Parser::parseExpr(unsigned int limit)
+ {
+     static const BinaryOpPriority binaryPriority[] = {
+-        {6, 6},  // '+'
+-        {6, 6},  // '-'
+-        {7, 7},  // '*'
+-        {7, 7},  // '/'
+-        {7, 7},  // '//'
+-        {7, 7},  // `%'
+-        {10, 9}, // power (right associative)
+-        {5, 4},  // concat (right associative)
++        {10, 10},  // '+'
++        {10, 10},  // '-'
++        {11, 11},  // '*'
++        {11, 11},  // '/'
++        {11, 11},  // '//'
++        {11, 11},  // `%'
++        {14, 13}, // power (right associative)
++        {9, 8},  // concat (right associative)
+         {3, 3},  // inequality
+         {3, 3},  // equality
+         {3, 3},  // '<'
+@@ -3686,7 +3757,7 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+     // this handles recursive calls to parseSubExpr/parseExpr
+     incrementRecursionCounter("expression");
+ 
+-    const unsigned int unaryPriority = 8;
++    const unsigned int unaryPriority = 12;
+ 
+     Location start = lexer.current().location;
+ 
+@@ -3697,7 +3768,13 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+     if (!uop)
+         uop = checkUnaryConfusables();
+ 
+-    if (uop)
++    if (lexer.current().type == '~')
++    {
++        Location op = lexer.current().location;
++        nextLexeme();
++        expr = makeBitCall(op, "bnot", nullptr, parseExpr(unaryPriority));
++    }
++    else if (uop)
+     {
+         Position opPosition = lexer.current().location.begin;
+         nextLexeme();
+@@ -3714,26 +3791,36 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+     }
+ 
+     // expand while operators have priorities higher than `limit'
+-    std::optional<AstExprBinary::Op> op = parseBinaryOp(lexer.current());
+-
+-    if (!op)
+-        op = checkBinaryConfusables(binaryPriority, limit);
+-
+-    while (op && binaryPriority[*op].left > limit)
++    while (true)
+     {
+-        Position opPosition = lexer.current().location.begin;
+-        nextLexeme();
+-
+-        // read sub-expression with higher priority
+-        AstExpr* next = parseExpr(binaryPriority[*op].right);
+-
+-        expr = allocator.alloc<AstExprBinary>(Location(start, next->location), *op, expr, next);
+-        if (options.storeCstData)
+-            cstNodeMap[expr] = allocator.alloc<CstExprOp>(opPosition);
+-        op = parseBinaryOp(lexer.current());
+-
+-        if (!op)
+-            op = checkBinaryConfusables(binaryPriority, limit);
++        auto bit = bitOperator();
++        if (bit.function && !bit.assignment)
++        {
++            if (bit.precedence <= limit)
++                break;
++            Location op = lexer.current().location;
++            if (bit.twoTokens)
++            {
++                nextLexeme();
++                op.end = lexer.current().location.end;
++            }
++            nextLexeme();
++            expr = makeBitCall(op, bit.function, expr, parseExpr(bit.precedence));
++        }
++        else
++        {
++            auto op = parseBinaryOp(lexer.current());
++            if (!op)
++                op = checkBinaryConfusables(binaryPriority, limit);
++            if (!op || binaryPriority[*op].left <= limit)
++                break;
++            Position opPosition = lexer.current().location.begin;
++            nextLexeme();
++            AstExpr* next = parseExpr(binaryPriority[*op].right);
++            expr = allocator.alloc<AstExprBinary>(Location(start, next->location), *op, expr, next);
++            if (options.storeCstData)
++                cstNodeMap[expr] = allocator.alloc<CstExprOp>(opPosition);
++        }
+ 
+         // note: while the parser isn't recursive here, we're generating recursive structures of unbounded depth
+         incrementRecursionCounter("expression");
+@@ -3854,7 +3941,7 @@ AstExpr* Parser::parsePrimaryExpr(bool asStatement)
+         {
+             expr = parseFunctionArgs(expr, false);
+         }
+-        else if (lexer.current().type == '<' && lexer.lookahead().type == '<')
++        else if (isExplicitTypeCall(expr->location.end))
+         {
+             expr = parseExplicitTypeInstantiationExpr(start, *expr);
+         }

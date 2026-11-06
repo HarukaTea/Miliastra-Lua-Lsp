@@ -1,0 +1,37 @@
+name: Native VSIX
+on:
+  push:
+    branches: [luau-lsp]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            target: win32-x64
+          - runner: macos-15
+            target: darwin-arm64
+          - runner: ubuntu-22.04
+            target: linux-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:server
+      - run: npx --yes @vscode/vsce@3.6.2 package --target ${{ matrix.target }} --out miliastra-${{ matrix.target }}.vsix
+      - run: python scripts/check-vsix.py miliastra-${{ matrix.target }}.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: miliastra-${{ matrix.target }}
+          path: miliastra-${{ matrix.target }}.vsix

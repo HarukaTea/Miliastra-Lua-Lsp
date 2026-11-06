@@ -9,13 +9,7 @@
 	},
 	"capabilities": {
 		"untrustedWorkspaces": {
-			"description": "",
-			"restrictedConfigurations": [
-				"miliastraLsp.develop.enable",
-				"miliastraLsp.runtime.plugin",
-				"miliastraLsp.misc.parameters"
-			],
-			"supported": "limited"
+			"supported": true
 		}
 	},
 	"categories": [
@@ -44,33 +38,11 @@
 					"scope": "resource",
 					"type": "boolean"
 				},
-				"miliastraLsp.completion.displayContext": {
-					"default": 0,
-					"markdownDescription": "%config.completion.displayContext%",
-					"scope": "resource",
-					"type": "integer"
-				},
 				"miliastraLsp.completion.enable": {
 					"default": true,
 					"markdownDescription": "%config.completion.enable%",
 					"scope": "resource",
 					"type": "boolean"
-				},
-				"miliastraLsp.completion.keywordSnippet": {
-					"default": "Replace",
-					"enum": [
-						"Disable",
-						"Both",
-						"Replace"
-					],
-					"markdownDescription": "%config.completion.keywordSnippet%",
-					"markdownEnumDescriptions": [
-						"%config.completion.keywordSnippet.Disable%",
-						"%config.completion.keywordSnippet.Both%",
-						"%config.completion.keywordSnippet.Replace%"
-					],
-					"scope": "resource",
-					"type": "string"
 				},
 				"miliastraLsp.completion.showParams": {
 					"default": true,
@@ -81,12 +53,6 @@
 				"miliastraLsp.completion.endAutocompletion": {
 					"default": false,
 					"markdownDescription": "%config.completion.endAutocompletion%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.completion.workspaceWord": {
-					"default": true,
-					"markdownDescription": "%config.completion.workspaceWord%",
 					"scope": "resource",
 					"type": "boolean"
 				},
@@ -102,703 +68,11 @@
 					"scope": "resource",
 					"type": "boolean"
 				},
-				"miliastraLsp.develop.debuggerPort": {
-					"default": 11412,
-					"markdownDescription": "%config.develop.debuggerPort%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.develop.debuggerWait": {
-					"default": false,
-					"markdownDescription": "%config.develop.debuggerWait%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.develop.enable": {
-					"default": false,
-					"markdownDescription": "%config.develop.enable%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.diagnostics.disable": {
-					"items": {
-						"type": "string"
-					},
-					"markdownDescription": "%config.diagnostics.disable%",
-					"scope": "resource",
-					"type": "array"
-				},
 				"miliastraLsp.diagnostics.enable": {
 					"default": true,
 					"markdownDescription": "%config.diagnostics.enable%",
 					"scope": "resource",
 					"type": "boolean"
-				},
-				"miliastraLsp.diagnostics.globals": {
-					"items": {
-						"type": "string"
-					},
-					"markdownDescription": "%config.diagnostics.globals%",
-					"scope": "resource",
-					"type": "array"
-				},
-				"miliastraLsp.diagnostics.neededFileStatus": {
-					"markdownDescription": "%config.diagnostics.neededFileStatus%",
-					"properties": {
-						"circle-doc-class": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"deprecated": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"doc-field-no-class": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-doc-class": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-doc-field": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-doc-param": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-index": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-set-field": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"empty-block": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"global-in-nil-env": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"newfield-call": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"newline-call": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"no-implicit-any": {
-							"default": "None",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redefined-local": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redundant-parameter": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redundant-value": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"trailing-space": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unbalanced-assignments": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-class": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-name": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-module": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-param": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-env-child": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-global": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unknown-diag-code": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unused-function": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unused-local": {
-							"default": "Opened",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unused-vararg": {
-						"default": "Opened",
-						"enum": [
-							"Any",
-							"Opened",
-							"None"
-						],
-						"scope": "resource",
-						"type": "string"
-					},
-					"undefined-type": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redefined-type": {
-							"default": "Any",
-							"enum": [
-								"Any",
-								"Opened",
-								"None"
-							],
-							"scope": "resource",
-							"type": "string"
-						}
-					},
-					"scope": "resource",
-					"title": "neededFileStatus",
-					"type": "object"
-				},
-				"miliastraLsp.diagnostics.severity": {
-					"markdownDescription": "%config.diagnostics.severity%",
-					"properties": {
-						"circle-doc-class": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"deprecated": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"doc-field-no-class": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-doc-class": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-doc-field": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-doc-param": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-index": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-set-field": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"empty-block": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"global-in-nil-env": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"newfield-call": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"newline-call": {
-							"default": "Information",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"no-implicit-any": {
-							"default": "Information",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redefined-local": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redundant-parameter": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redundant-value": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"trailing-space": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unbalanced-assignments": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-class": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-name": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-module": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-doc-param": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-env-child": {
-							"default": "Information",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"undefined-global": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unknown-diag-code": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unused-function": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unused-local": {
-							"default": "Hint",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"unused-vararg": {
-						"default": "Hint",
-						"enum": [
-							"Error",
-							"Warning",
-							"Information",
-							"Hint"
-						],
-						"scope": "resource",
-						"type": "string"
-					},
-					"undefined-type": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"redefined-type": {
-							"default": "Warning",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						}
-					},
-					"scope": "resource",
-					"title": "severity",
-					"type": "object"
-				},
-				"miliastraLsp.diagnostics.workspaceDelay": {
-					"default": 0,
-					"markdownDescription": "%config.diagnostics.workspaceDelay%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.diagnostics.workspaceRate": {
-					"default": 100,
-					"markdownDescription": "%config.diagnostics.workspaceRate%",
-					"scope": "resource",
-					"type": "integer"
 				},
 				"miliastraLsp.hint.enable": {
 					"default": false,
@@ -818,12 +92,6 @@
 					"scope": "resource",
 					"type": "boolean"
 				},
-				"miliastraLsp.hint.setType": {
-					"default": false,
-					"markdownDescription": "%config.hint.setType%",
-					"scope": "resource",
-					"type": "boolean"
-				},
 				"miliastraLsp.hint.variableType": {
 					"default": true,
 					"markdownDescription": "%config.hint.variableType%",
@@ -835,54 +103,6 @@
 					"markdownDescription": "%config.hint.returnType%",
 					"scope": "resource",
 					"type": "boolean"
-				},
-				"miliastraLsp.hover.enumsLimit": {
-					"default": 5,
-					"markdownDescription": "%config.hover.enumsLimit%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.hover.fieldInfer": {
-					"default": 3000,
-					"markdownDescription": "%config.hover.fieldInfer%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.hover.previewFields": {
-					"default": 100,
-					"markdownDescription": "%config.hover.previewFields%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.hover.viewNumber": {
-					"default": true,
-					"markdownDescription": "%config.hover.viewNumber%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.hover.viewString": {
-					"default": true,
-					"markdownDescription": "%config.hover.viewString%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.hover.viewStringMax": {
-					"default": 1000,
-					"markdownDescription": "%config.hover.viewStringMax%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.intelliSense.searchDepth": {
-					"default": 0,
-					"markdownDescription": "%config.intelliSense.searchDepth%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.misc.parameters": {
-					"default": "",
-					"markdownDescription": "%config.misc.parameters%",
-					"scope": "resource",
-					"type": "string"
 				},
 				"miliastraLsp.runtime.path": {
 					"default": [
@@ -900,27 +120,9 @@
 					"scope": "resource",
 					"type": "array"
 				},
-				"miliastraLsp.runtime.plugin": {
-					"default": ".vscode/lua/plugin.lua",
-					"markdownDescription": "%config.runtime.plugin%",
-					"scope": "resource",
-					"type": "string"
-				},
 				"miliastraLsp.signatureHelp.enable": {
 					"default": true,
 					"markdownDescription": "%config.signatureHelp.enable%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.signatureHelp.documentation": {
-					"default": true,
-					"markdownDescription": "%config.signatureHelp.documentation%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.window.progressBar": {
-					"default": true,
-					"markdownDescription": "%config.window.progressBar%",
 					"scope": "resource",
 					"type": "boolean"
 				},
@@ -942,118 +144,11 @@
 					"scope": "resource",
 					"type": "array"
 				},
-				"miliastraLsp.workspace.ignoreSubmodules": {
-					"default": true,
-					"markdownDescription": "%config.workspace.ignoreSubmodules%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.workspace.library": {
-					"items": {
-						"type": "string"
-					},
-					"markdownDescription": "%config.workspace.library%",
-					"scope": "resource",
-					"type": "array"
-				},
 				"miliastraLsp.workspace.maxPreload": {
 					"default": 1000,
 					"markdownDescription": "%config.workspace.maxPreload%",
 					"scope": "resource",
 					"type": "integer"
-				},
-				"miliastraLsp.workspace.preloadFileSize": {
-					"default": 500,
-					"markdownDescription": "%config.workspace.preloadFileSize%",
-					"scope": "resource",
-					"type": "integer"
-				},
-				"miliastraLsp.workspace.useGitIgnore": {
-					"default": true,
-					"markdownDescription": "%config.workspace.useGitIgnore%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.workspace.useFilesExclude": {
-					"default": true,
-					"markdownDescription": "%config.workspace.useFilesExclude%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.workspace.loadRequiredFiles": {
-					"default": true,
-					"markdownDescription": "%config.workspace.loadRequiredFiles%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.runtime.fileEncoding": {
-					"default": "utf8",
-					"enum": [
-						"utf8",
-						"ansi"
-					],
-					"markdownDescription": "%config.runtime.fileEncoding%",
-					"scope": "resource",
-					"type": "string"
-				},
-				"miliastraLsp.misc.colorPicker": {
-					"default": true,
-					"markdownDescription": "%config.misc.colorPicker%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.misc.documentLink": {
-					"default": true,
-					"markdownDescription": "%config.misc.documentLink%",
-					"scope": "resource",
-					"type": "boolean"
-				},
-				"miliastraLsp.typeChecking.mode": {
-					"default": "Disabled",
-					"enum": [
-						"Disabled",
-						"Non Strict",
-						"Strict"
-					],
-					"markdownDescription": "%config.typeChecking.mode%",
-					"markdownEnumDescriptions": [
-						"%config.typeChecking.mode.disabled%",
-						"%config.typeChecking.mode.nonStrict%",
-						"%config.typeChecking.mode.strict%"
-					],
-					"scope": "resource",
-					"type": "string"
-				},
-				"miliastraLsp.typeChecking.options": {
-					"markdownDescription": "%config.typeChecking.options%",
-					"properties": {
-						"union-bivariance": {
-							"default": true,
-							"description": "%config.typeChecking.options.union-bivariance%",
-							"scope": "resource",
-							"type": "boolean"
-						},
-						"ignore-extra-fields": {
-							"default": false,
-							"description": "%config.typeChecking.options.ignore-extra-fields%",
-							"scope": "resource",
-							"type": "boolean"
-						},
-						"recursive-get-type": {
-							"default": false,
-							"description": "%config.typeChecking.options.recursive-get-type%",
-							"scope": "resource",
-							"type": "boolean"
-						}
-					},
-					"scope": "resource",
-					"type": "object"
-				},
-				"miliastraLsp.typeChecking.showFullType": {
-					"default": false,
-					"markdownDescription": "%config.typeChecking.showFullType%",
-					"scope": "resource",
-					"type": "boolean"
 				}
 			},
 			"title": "千星奇域 Lua LSP",
@@ -1123,20 +218,34 @@
 			}
 		]
 	},
-	"description": "千星Lua语法高亮，与自动补全",
+	"description": "千星奇域 Lua / Luau 语言服务，提供运行时 API 补全、跳转和类型诊断。",
 	"displayName": "千星奇域 Lua LSP",
 	"engines": {
-		"vscode": "^1.60.0"
+		"vscode": "^1.74.0"
 	},
 	"icon": "images/logo.png",
 	"keywords": [
 		"Lua",
 		"IntelliSense",
-		"千星奇域", "Miliastra"
+		"千星奇域",
+		"Miliastra"
 	],
 	"license": "MIT",
 	"main": "./client/out/extension",
 	"name": "miliastraLsp",
 	"publisher": "HarukaTea",
-	"version": "0.0.8"
+	"version": "0.0.8",
+	"dependencies": {
+		"vscode-languageclient": "8.0.2"
+	},
+	"devDependencies": {
+		"@types/node": "17.0.45",
+		"@types/vscode": "1.74.0",
+		"typescript": "4.9.5"
+	},
+	"scripts": {
+		"compile": "tsc -p client",
+		"vscode:prepublish": "npm run compile",
+		"build:server": "node scripts/build-server.js"
+	}
 }

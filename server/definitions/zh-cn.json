@@ -1,0 +1,842 @@
+{
+  "@miliastra/global/Color": {
+    "documentation": "颜色构造与转换。"
+  },
+  "@miliastra/global/Enum": {
+    "documentation": "所有枚举的命名空间。"
+  },
+  "@miliastra/global/game": {
+    "documentation": "客户端运行时提供的全局表。以下函数均使用点号调用。"
+  },
+  "@miliastra/global/script": {
+    "documentation": "当前脚本实例。"
+  },
+  "@miliastra/globaltype/ClientUIAnimationControl.PlayAnimation": {
+    "documentation": "播放界面动效。"
+  },
+  "@miliastra/globaltype/ClientUIAnimationControl.StopAnimation": {
+    "documentation": "停止界面动效。"
+  },
+  "@miliastra/globaltype/ClientUIAnimationControl.animationId": {
+    "documentation": "动效 ID。"
+  },
+  "@miliastra/globaltype/ClientUIAnimationControl.layer": {
+    "documentation": "动效层级。"
+  },
+  "@miliastra/globaltype/ClientUIAnimationControl.playSoundEffect": {
+    "documentation": "是否播放动效音效。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.AddKeyEventListener": {
+    "documentation": "注册指定按键事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.AddNavigationEventListener": {
+    "documentation": "注册手柄导航事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.FindChild": {
+    "documentation": "按路径查找子控件。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetAnchorMax": {
+    "documentation": "获取最大锚点。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetAnchorMin": {
+    "documentation": "获取最小锚点。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetAnchoredPosition": {
+    "documentation": "获取位置。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetChild": {
+    "documentation": "按名称获取直接子控件。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetChildren": {
+    "documentation": "获取直接子控件。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetControllerNavigation": {
+    "documentation": "返回指定方向的手柄导航配置。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetLocalRotation": {
+    "documentation": "获取旋转。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetLocalScale": {
+    "documentation": "获取缩放。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetPivot": {
+    "documentation": "获取轴心。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetScript": {
+    "documentation": "按脚本元件 ID 获取脚本。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetScriptByPath": {
+    "documentation": "按路径获取挂载的脚本。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetScripts": {
+    "documentation": "获取控件上全部脚本。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetSiblingIndex": {
+    "documentation": "获取同级排序索引。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.GetSizeDelta": {
+    "documentation": "获取大小。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.RemoveAllKeyEventListeners": {
+    "documentation": "移除全部按键事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.RemoveAllNavigationEventListeners": {
+    "documentation": "移除全部手柄导航事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.RemoveKeyEventListener": {
+    "documentation": "移除单个按键事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.RemoveKeyEventListeners": {
+    "documentation": "移除指定事件的全部监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.RemoveNavigationEventListener": {
+    "documentation": "移除指定手柄导航事件和回调。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.RemoveNavigationEventListeners": {
+    "documentation": "移除指定导航事件的全部监听。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetActive": {
+    "documentation": "设置激活状态；false 时脚本逻辑停止运行。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetAnchorMax": {
+    "documentation": "设置最大锚点。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetAnchorMin": {
+    "documentation": "设置最小锚点。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetAnchoredPosition": {
+    "documentation": "设置位置。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetAsFirstSibling": {
+    "documentation": "移到同级首位。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetAsLastSibling": {
+    "documentation": "移到同级末位。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetControllerNavigation": {
+    "documentation": "设置指定方向的手柄导航；目标可以为 nil。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetLocalRotation": {
+    "documentation": "设置旋转。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetLocalScale": {
+    "documentation": "设置缩放。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetPivot": {
+    "documentation": "设置轴心。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetSiblingIndex": {
+    "documentation": "设置同级排序索引。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetSizeDelta": {
+    "documentation": "设置大小。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.SetVisible": {
+    "documentation": "仅设置可见性，不停止脚本逻辑。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.active": {
+    "documentation": "控件激活状态。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.activeInHierarchy": {
+    "documentation": "控件在层级中是否激活。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.alive": {
+    "documentation": "控件是否存活。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.anchorMaxX": {
+    "documentation": "最大锚点 X（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.anchorMaxY": {
+    "documentation": "最大锚点 Y（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.anchorMinX": {
+    "documentation": "最小锚点 X（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.anchorMinY": {
+    "documentation": "最小锚点 Y（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.anchoredPositionX": {
+    "documentation": "X 锚点位置（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.anchoredPositionY": {
+    "documentation": "Y 锚点位置（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.canControllerFocus": {
+    "documentation": "是否可被手柄聚焦。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.id": {
+    "documentation": "控件实例 ID。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.localRotationX": {
+    "documentation": "旋转 X（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.localRotationY": {
+    "documentation": "旋转 Y（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.localRotationZ": {
+    "documentation": "旋转 Z（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.localScaleX": {
+    "documentation": "缩放 X（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.localScaleY": {
+    "documentation": "缩放 Y（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.localScaleZ": {
+    "documentation": "缩放 Z（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.name": {
+    "documentation": "控件名称。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.parent": {
+    "documentation": "父控件。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.pivotX": {
+    "documentation": "轴心 X（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.pivotY": {
+    "documentation": "轴心 Y（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.prefabId": {
+    "documentation": "控件元件 ID。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.sizeDeltaX": {
+    "documentation": "宽度（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.sizeDeltaY": {
+    "documentation": "高度（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIBaseControl.visible": {
+    "documentation": "控件可见状态。"
+  },
+  "@miliastra/globaltype/ClientUIContainerControl.disableCursorEventPassthrough": {
+    "documentation": "是否屏蔽区域内点击事件穿透。"
+  },
+  "@miliastra/globaltype/ClientUIContainerControl.disableKeyEventPassthrough": {
+    "documentation": "是否屏蔽按键事件穿透。"
+  },
+  "@miliastra/globaltype/ClientUIContainerControl.isolateNavigation": {
+    "documentation": "是否隔离手柄导航。"
+  },
+  "@miliastra/globaltype/ClientUIContainerControl.showCursor": {
+    "documentation": "是否显示常驻光标。"
+  },
+  "@miliastra/globaltype/ClientUICursorEventAreaControl.AddCursorEventListener": {
+    "documentation": "注册光标事件监听。"
+  },
+  "@miliastra/globaltype/ClientUICursorEventAreaControl.RemoveAllCursorEventListeners": {
+    "documentation": "移除全部光标事件监听。"
+  },
+  "@miliastra/globaltype/ClientUICursorEventAreaControl.RemoveCursorEventListener": {
+    "documentation": "移除指定事件和回调。"
+  },
+  "@miliastra/globaltype/ClientUICursorEventAreaControl.RemoveCursorEventListeners": {
+    "documentation": "移除指定光标事件的全部监听。"
+  },
+  "@miliastra/globaltype/ClientUICursorEventAreaControl.SimulateCursorClick": {
+    "documentation": "按顺序模拟一次光标点击。"
+  },
+  "@miliastra/globaltype/ClientUICursorEventAreaControl.raycastTarget": {
+    "documentation": "可被光标射线检测。"
+  },
+  "@miliastra/globaltype/ClientUIFullscreenAnimationControl.animationId": {
+    "documentation": "动效 ID。"
+  },
+  "@miliastra/globaltype/ClientUIFullscreenAnimationControl.playSoundEffect": {
+    "documentation": "是否播放动效音效。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.GetContentLength": {
+    "documentation": "获取滚动内容在滚动方向上的长度。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.GetItemIndex": {
+    "documentation": "获取条目控件的序号。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.GetItemSize": {
+    "documentation": "获取条目宽度与高度。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.GetItemSpacing": {
+    "documentation": "获取条目的水平与垂直间距。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.GetPadding": {
+    "documentation": "获取内容区域的上下左右内边距。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.RefreshItems": {
+    "documentation": "刷新条目并逐项回调控件和条目序号。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.ScrollToItemAt": {
+    "documentation": "滚动到指定序号条目。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.interactable": {
+    "documentation": "是否可交互。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.itemCount": {
+    "documentation": "条目数量。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.itemPrefabId": {
+    "documentation": "条目元件 ID。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.layoutConstraint": {
+    "documentation": "布局约束。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.layoutConstraintFixedCount": {
+    "documentation": "固定行数或列数。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.raycastTarget": {
+    "documentation": "可被光标射线检测。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.scrollDirection": {
+    "documentation": "滚动方向。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.scrollProgress": {
+    "documentation": "滚动进度（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIGridScrollerControl.showScrollBar": {
+    "documentation": "是否显示滚动条。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetFillHorizontal": {
+    "documentation": "设置水平填充。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetFillRadial180": {
+    "documentation": "设置 180 度径向填充。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetFillRadial360": {
+    "documentation": "设置 360 度径向填充。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetFillRadial90": {
+    "documentation": "设置 90 度径向填充。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetFillUnused": {
+    "documentation": "关闭填充裁切。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetFillVertical": {
+    "documentation": "设置垂直填充。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetImage": {
+    "documentation": "设置图片来源与 ID。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.SetSoftEdgeWidth": {
+    "documentation": "设置水平与垂直边缘羽化宽度。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.enableMask": {
+    "documentation": "是否启用遮罩。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.enableSoftEdge": {
+    "documentation": "是否启用边缘羽化。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.fillAmount": {
+    "documentation": "填充进度（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.fillHorizontalType": {
+    "documentation": "水平填充类型。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.fillRadial90Type": {
+    "documentation": "90 度径向填充类型。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.fillRadialType": {
+    "documentation": "180/360 度径向填充类型。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.fillType": {
+    "documentation": "填充类型。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.fillVerticalType": {
+    "documentation": "垂直填充类型。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.horizontalSoftRange": {
+    "documentation": "水平羽化范围（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.imageColor": {
+    "documentation": "图片颜色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.imageId": {
+    "documentation": "图片 ID。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.imageSource": {
+    "documentation": "图片来源。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.imageType": {
+    "documentation": "图片类型。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.reverseMaskArea": {
+    "documentation": "是否反转遮罩区域。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.softEdgeMode": {
+    "documentation": "边缘羽化模式。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.softEdgeWidthX": {
+    "documentation": "边缘羽化宽度 X（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.softEdgeWidthY": {
+    "documentation": "边缘羽化宽度 Y（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIImageControl.verticalSoftRange": {
+    "documentation": "垂直羽化范围（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUIKeyHintControl.controllerKeyCode": {
+    "documentation": "手柄按键枚举值。"
+  },
+  "@miliastra/globaltype/ClientUIKeyHintControl.keyboardKeyCode": {
+    "documentation": "键鼠按键枚举值。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.AddCursorEventListener": {
+    "documentation": "注册光标事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.RemoveAllCursorEventListeners": {
+    "documentation": "移除全部光标事件监听。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.RemoveCursorEventListener": {
+    "documentation": "移除指定事件和回调。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.RemoveCursorEventListeners": {
+    "documentation": "移除指定光标事件的全部监听。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.SimulateCursorClick": {
+    "documentation": "按顺序模拟一次光标点击。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.clickAudioId": {
+    "documentation": "点击音效 ID。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.interactable": {
+    "documentation": "是否可交互。"
+  },
+  "@miliastra/globaltype/ClientUIPresetButtonControl.raycastTarget": {
+    "documentation": "可被光标射线检测。"
+  },
+  "@miliastra/globaltype/ClientUIReferenceControl.referencedPrefabId": {
+    "documentation": "引用的界面元件 ID。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.adaptiveFontSize": {
+    "documentation": "字号自适应。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.bgColor": {
+    "documentation": "背景色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.enableOutline": {
+    "documentation": "是否启用描边。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.fontColor": {
+    "documentation": "字色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.fontSize": {
+    "documentation": "字号（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.horizontalAlignment": {
+    "documentation": "水平对齐。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.minimumFontSize": {
+    "documentation": "字号自适应的最小字号。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.outlineColor": {
+    "documentation": "描边色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.text": {
+    "documentation": "显示文本。"
+  },
+  "@miliastra/globaltype/ClientUITextBoxControl.verticalAlignment": {
+    "documentation": "垂直对齐。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.adaptiveFontSize": {
+    "documentation": "字号自适应。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.bgColor": {
+    "documentation": "背景色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.enableOutline": {
+    "documentation": "是否启用描边。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.fontColor": {
+    "documentation": "字色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.fontSize": {
+    "documentation": "字号（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.horizontalAlignment": {
+    "documentation": "水平对齐。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.interactable": {
+    "documentation": "是否可交互；false 时手柄无法聚焦。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.minimumFontSize": {
+    "documentation": "字号自适应的最小字号。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.outlineColor": {
+    "documentation": "描边色（可 Tween）。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.showScrollBar": {
+    "documentation": "是否显示滚动条。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.text": {
+    "documentation": "显示文本。"
+  },
+  "@miliastra/globaltype/ClientUITextWindowControl.verticalAlignment": {
+    "documentation": "垂直对齐。"
+  },
+  "@miliastra/globaltype/ColorConstructor.FromRGB": {
+    "documentation": "由 0-255 RGB 创建颜色。"
+  },
+  "@miliastra/globaltype/ColorConstructor.FromRGBA": {
+    "documentation": "由 0-255 RGBA 创建颜色，a 传 nil。"
+  },
+  "@miliastra/globaltype/ColorConstructor.ToRGBA": {
+    "documentation": "将颜色拆分为四个分量。"
+  },
+  "@miliastra/globaltype/CursorEventData.GetPressUIPos": {
+    "documentation": "获取按下时的 UI 坐标。"
+  },
+  "@miliastra/globaltype/CursorEventData.GetUIPos": {
+    "documentation": "获取当前 UI 坐标。"
+  },
+  "@miliastra/globaltype/CursorEventData.GetUIPosDelta": {
+    "documentation": "获取本次事件的坐标变化。"
+  },
+  "@miliastra/globaltype/CursorEventData.dragging": {
+    "documentation": "是否拖拽中。"
+  },
+  "@miliastra/globaltype/CursorEventData.touchId": {
+    "documentation": "触摸 ID。"
+  },
+  "@miliastra/globaltype/EnumItem.EnumType": {
+    "documentation": "枚举类型名称。"
+  },
+  "@miliastra/globaltype/EnumItem.FullName": {
+    "documentation": "枚举值完整名称。"
+  },
+  "@miliastra/globaltype/EnumItem.Name": {
+    "documentation": "枚举值名称。"
+  },
+  "@miliastra/globaltype/Enums.ControllerKeyCode": {
+    "documentation": "手柄按键码"
+  },
+  "@miliastra/globaltype/Enums.ControllerNavigationDir": {
+    "documentation": "手柄导航方向"
+  },
+  "@miliastra/globaltype/Enums.ControllerNavigationEventType": {
+    "documentation": "手柄导航事件类型"
+  },
+  "@miliastra/globaltype/Enums.ControllerNavigationMode": {
+    "documentation": "手柄导航模式"
+  },
+  "@miliastra/globaltype/Enums.CursorEventType": {
+    "documentation": "光标事件类型"
+  },
+  "@miliastra/globaltype/Enums.CustomVariableEntityType": {
+    "documentation": "自定义变量实体类型"
+  },
+  "@miliastra/globaltype/Enums.Device": {
+    "documentation": "输入设备类型"
+  },
+  "@miliastra/globaltype/Enums.EaseType": {
+    "documentation": "缓动类型"
+  },
+  "@miliastra/globaltype/Enums.ImageFillHorizontalType": {
+    "documentation": "水平填充起始"
+  },
+  "@miliastra/globaltype/Enums.ImageFillRadial90Type": {
+    "documentation": "90 度径向填充起始"
+  },
+  "@miliastra/globaltype/Enums.ImageFillRadialType": {
+    "documentation": "径向填充起始"
+  },
+  "@miliastra/globaltype/Enums.ImageFillType": {
+    "documentation": "图片填充类型"
+  },
+  "@miliastra/globaltype/Enums.ImageFillVerticalType": {
+    "documentation": "垂直填充起始"
+  },
+  "@miliastra/globaltype/Enums.ImageMaskSoftEdgeMode": {
+    "documentation": "边缘羽化模式"
+  },
+  "@miliastra/globaltype/Enums.ImageSource": {
+    "documentation": "图片来源"
+  },
+  "@miliastra/globaltype/Enums.ImageType": {
+    "documentation": "图片类型"
+  },
+  "@miliastra/globaltype/Enums.KeyEventType": {
+    "documentation": "按键事件类型"
+  },
+  "@miliastra/globaltype/Enums.KeyboardKeyCode": {
+    "documentation": "键盘按键码"
+  },
+  "@miliastra/globaltype/Enums.LanguageType": {
+    "documentation": "语言类型"
+  },
+  "@miliastra/globaltype/Enums.ParamType": {
+    "documentation": "信号参数类型"
+  },
+  "@miliastra/globaltype/Enums.ScrollAlignType": {
+    "documentation": "滚动对齐类型"
+  },
+  "@miliastra/globaltype/Enums.ScrollDirection": {
+    "documentation": "滚动方向"
+  },
+  "@miliastra/globaltype/Enums.ScrollLayoutConstraint": {
+    "documentation": "滚动布局约束"
+  },
+  "@miliastra/globaltype/Enums.StageMode": {
+    "documentation": "关卡模式"
+  },
+  "@miliastra/globaltype/Enums.TextHorizontalAlignment": {
+    "documentation": "文本水平对齐"
+  },
+  "@miliastra/globaltype/Enums.TextVerticalAlignment": {
+    "documentation": "文本垂直对齐"
+  },
+  "@miliastra/globaltype/Enums.UIAnimationLayer": {
+    "documentation": "动效层级"
+  },
+  "@miliastra/globaltype/Game.DestroyClientUIControl": {
+    "documentation": "销毁指定客户端控件。"
+  },
+  "@miliastra/globaltype/Game.FindClientUIRoot": {
+    "documentation": "按名称查找 UI 根控件。"
+  },
+  "@miliastra/globaltype/Game.GetClientUIControl": {
+    "documentation": "按运行时客户端控件 ID 获取控件。"
+  },
+  "@miliastra/globaltype/Game.GetClientUIRoots": {
+    "documentation": "获取全部 UI 根控件。"
+  },
+  "@miliastra/globaltype/Game.GetControllerFocus": {
+    "documentation": "获取当前手柄聚焦控件。"
+  },
+  "@miliastra/globaltype/Game.GetControllerLeftStickAxis": {
+    "documentation": "获取左摇杆轴值。"
+  },
+  "@miliastra/globaltype/Game.GetControllerRightStickAxis": {
+    "documentation": "获取右摇杆轴值。"
+  },
+  "@miliastra/globaltype/Game.GetCursorUIPos": {
+    "documentation": "获取光标 UI 坐标。"
+  },
+  "@miliastra/globaltype/Game.GetDevice": {
+    "documentation": "获取当前输入设备类型。"
+  },
+  "@miliastra/globaltype/Game.GetGlobalCustomVariableValue": {
+    "documentation": "读取服务器指定实体的全局自定义变量。"
+  },
+  "@miliastra/globaltype/Game.GetLanguageType": {
+    "documentation": "获取当前语言。"
+  },
+  "@miliastra/globaltype/Game.GetStageMode": {
+    "documentation": "获取当前关卡模式。"
+  },
+  "@miliastra/globaltype/Game.GetText": {
+    "documentation": "按已配置的文本 ID 获取文本。"
+  },
+  "@miliastra/globaltype/Game.GetUICanvasSize": {
+    "documentation": "获取 UI 画布宽高。"
+  },
+  "@miliastra/globaltype/Game.InstantiateClientUIControl": {
+    "documentation": "根据已配置的 UI 元件创建控件实例。"
+  },
+  "@miliastra/globaltype/Game.IsAudioAlive": {
+    "documentation": "查询音效实例是否存活。"
+  },
+  "@miliastra/globaltype/Game.IsLevelTimePaused": {
+    "documentation": "查询关卡时间是否暂停。"
+  },
+  "@miliastra/globaltype/Game.IsTestPlay": {
+    "documentation": "查询当前是否处于测试游玩。"
+  },
+  "@miliastra/globaltype/Game.PauseLevelTime": {
+    "documentation": "单人模式下暂停/恢复关卡时间。"
+  },
+  "@miliastra/globaltype/Game.PlayAudio2D": {
+    "documentation": "按已配置的音效 ID 播放 2D 音效，返回音效实例 ID。"
+  },
+  "@miliastra/globaltype/Game.PrintClientUITree": {
+    "documentation": "将当前客户端控件树输出到控制台。"
+  },
+  "@miliastra/globaltype/Game.ServerSignal": {
+    "documentation": "按 signalName 创建服务器信号。"
+  },
+  "@miliastra/globaltype/Game.SetControllerFocus": {
+    "documentation": "设置手柄聚焦控件。"
+  },
+  "@miliastra/globaltype/Game.StopAudio": {
+    "documentation": "停止指定音效实例。"
+  },
+  "@miliastra/globaltype/Game.Tween": {
+    "documentation": "为对象的 Tweenable 字段创建补间动画。"
+  },
+  "@miliastra/globaltype/Game.TweenSequence": {
+    "documentation": "创建空的补间动画序列。"
+  },
+  "@miliastra/globaltype/Script.EnableUpdate": {
+    "documentation": "控制当前脚本的 Tick 开关，true 重新启用。"
+  },
+  "@miliastra/globaltype/Script.GetParam": {
+    "documentation": "按名称读取当前脚本参数。"
+  },
+  "@miliastra/globaltype/Script.Invoke": {
+    "documentation": "按名称调用当前脚本方法，应使用运行时支持的签名。"
+  },
+  "@miliastra/globaltype/Script.RegisterCustomVariableChangedHandler": {
+    "documentation": "监听全局自定义变量变化。"
+  },
+  "@miliastra/globaltype/Script.RegisterServerSignalHandler": {
+    "documentation": "注册服务器信号监听。"
+  },
+  "@miliastra/globaltype/Script.UnregisterCustomVariableChangedHandler": {
+    "documentation": "移除指定实体类型和变量名的监听。"
+  },
+  "@miliastra/globaltype/Script.UnregisterServerSignalHandler": {
+    "documentation": "移除指定名称的服务器信号监听。"
+  },
+  "@miliastra/globaltype/Script.alive": {
+    "documentation": "脚本实例是否仍然存活。"
+  },
+  "@miliastra/globaltype/Script.enabled": {
+    "documentation": "脚本启用状态。"
+  },
+  "@miliastra/globaltype/Script.id": {
+    "documentation": "脚本实例 ID。"
+  },
+  "@miliastra/globaltype/Script.object": {
+    "documentation": "脚本所挂载的宿主对象。"
+  },
+  "@miliastra/globaltype/Script.path": {
+    "documentation": "脚本路径。"
+  },
+  "@miliastra/globaltype/Script.prefabId": {
+    "documentation": "脚本元件 ID。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddBool": {
+    "documentation": "添加布尔值参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddBoolList": {
+    "documentation": "添加布尔值列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddConfigId": {
+    "documentation": "添加配置 ID 参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddConfigIdList": {
+    "documentation": "添加配置 ID 列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddEntity": {
+    "documentation": "添加实体参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddEntityList": {
+    "documentation": "添加实体列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddFloat": {
+    "documentation": "添加浮点数参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddFloatList": {
+    "documentation": "添加浮点数列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddGuid": {
+    "documentation": "添加 GUID 参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddGuidList": {
+    "documentation": "添加 GUID 列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddInt": {
+    "documentation": "添加整数参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddIntList": {
+    "documentation": "添加整数列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddParam": {
+    "documentation": "按显式类型添加参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddPrefabId": {
+    "documentation": "添加元件 ID 参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddPrefabIdList": {
+    "documentation": "添加元件 ID 列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddString": {
+    "documentation": "添加字符串参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddStringList": {
+    "documentation": "添加字符串列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddVector3": {
+    "documentation": "添加三维向量参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.AddVector3List": {
+    "documentation": "添加三维向量列表参数。"
+  },
+  "@miliastra/globaltype/ServerSignal.SendSignal": {
+    "documentation": "向服务器发送已编排好的信号。"
+  },
+  "@miliastra/globaltype/Tween.Complete": {
+    "documentation": "立即切换到结束状态。"
+  },
+  "@miliastra/globaltype/Tween.Kill": {
+    "documentation": "销毁实例；true 立即结束并触发完成回调，false 保持当前状态结束且不触发。"
+  },
+  "@miliastra/globaltype/Tween.Pause": {
+    "documentation": "暂停并保留当前进度。"
+  },
+  "@miliastra/globaltype/Tween.Play": {
+    "documentation": "开始播放并返回自身。"
+  },
+  "@miliastra/globaltype/Tween.Restart": {
+    "documentation": "回到开始状态并重新播放。"
+  },
+  "@miliastra/globaltype/Tween.Resume": {
+    "documentation": "从暂停处继续播放。"
+  },
+  "@miliastra/globaltype/Tween.SetEase": {
+    "documentation": "设置缓动类型并返回自身。"
+  },
+  "@miliastra/globaltype/Tween.SetLoops": {
+    "documentation": "设置循环次数，-1 无限循环。"
+  },
+  "@miliastra/globaltype/Tween.SetOnComplete": {
+    "documentation": "设置全部循环完成回调。"
+  },
+  "@miliastra/globaltype/Tween.SetOnStepComplete": {
+    "documentation": "设置步骤完成回调。"
+  },
+  "@miliastra/globaltype/Tween.SetRelative": {
+    "documentation": "设置目标值解释为相对值，true 表示相对。"
+  },
+  "@miliastra/globaltype/TweenSequence.Append": {
+    "documentation": "在序列末尾接入一个 Tween。"
+  },
+  "@miliastra/globaltype/TweenSequence.AppendCallback": {
+    "documentation": "在序列末尾接入回调。"
+  },
+  "@miliastra/globaltype/TweenSequence.AppendInterval": {
+    "documentation": "在序列末尾接入等待间隔。"
+  },
+  "@miliastra/globaltype/TweenSequence.Complete": {
+    "documentation": "立即完成整个序列。"
+  },
+  "@miliastra/globaltype/TweenSequence.Insert": {
+    "documentation": "在指定时间点插入 Tween。"
+  },
+  "@miliastra/globaltype/TweenSequence.InsertCallback": {
+    "documentation": "在指定时间点插入回调。"
+  },
+  "@miliastra/globaltype/TweenSequence.Join": {
+    "documentation": "与当前队尾步骤并行，结束以较晚者为准。"
+  },
+  "@miliastra/globaltype/TweenSequence.Kill": {
+    "documentation": "销毁序列；true 立即结束，false 保持当前状态结束。"
+  },
+  "@miliastra/globaltype/TweenSequence.Pause": {
+    "documentation": "暂停序列。"
+  },
+  "@miliastra/globaltype/TweenSequence.Play": {
+    "documentation": "开始播放并返回自身。"
+  },
+  "@miliastra/globaltype/TweenSequence.Restart": {
+    "documentation": "回到初始状态并重新播放。"
+  },
+  "@miliastra/globaltype/TweenSequence.Resume": {
+    "documentation": "继续播放序列。"
+  },
+  "@miliastra/globaltype/TweenSequence.SetLoops": {
+    "documentation": "设置循环次数，-1 无限循环。"
+  },
+  "@miliastra/globaltype/TweenSequence.SetOnComplete": {
+    "documentation": "设置整个序列完成回调。"
+  },
+  "@miliastra/globaltype/TweenSequence.SetOnStepComplete": {
+    "documentation": "设置步骤完成回调。"
+  }
+}
