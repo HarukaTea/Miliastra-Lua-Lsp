@@ -15,6 +15,36 @@ index 7b7590f..ebe756a 100644
  
  
  
+diff --git a/src/LuauExt.cpp b/src/LuauExt.cpp
+index 953ef01..109766a 100644
+--- a/src/LuauExt.cpp
++++ b/src/LuauExt.cpp
+@@ -56,7 +56,24 @@ std::optional<nlohmann::json> parseDefinitionsFileMetadata(const std::string& de
+ Luau::LoadDefinitionFileResult registerDefinitions(
+     Luau::Frontend& frontend, Luau::GlobalTypes& globals, const std::string& packageName, const std::string& definitions)
+ {
+-    return frontend.loadDefinitionFile(globals, globals.globalScope, definitions, packageName, /* captureComments = */ true);
++    auto result = frontend.loadDefinitionFile(globals, globals.globalScope, definitions, packageName, /* captureComments = */ true);
++    if (result.success && packageName == "@miliastra")
++    {
++        // Make Enum.EaseType usable as an annotation as well as a value namespace.
++        const auto& types = globals.globalScope->exportedTypeBindings;
++        auto base = types.find("EnumItem");
++        if (base != types.end())
++        {
++            auto& enums = globals.globalScope->importedTypeBindings["Enum"];
++            for (const auto& [name, binding] : types)
++            {
++                auto item = Luau::get<Luau::ExternType>(binding.type);
++                if (item && item->parent == base->second.type && Luau::startsWith(name, "Enum"))
++                    enums.insert_or_assign(name.substr(4), binding);
++            }
++        }
++    }
++    return result;
+ }
+ 
+ using NameOrExpr = std::variant<std::string, Luau::AstExpr*>;
 diff --git a/src/LuauFileUtils.cpp b/src/LuauFileUtils.cpp
 index 2895b13..80c5d61 100644
 --- a/src/LuauFileUtils.cpp

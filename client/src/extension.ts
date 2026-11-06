@@ -6,7 +6,7 @@ import { LanguageClient, LanguageClientOptions, State } from 'vscode-languagecli
 let client: LanguageClient | undefined;
 
 function serverSettings(uri?: vscode.Uri) {
-    const config = vscode.workspace.getConfiguration('miliastraLsp', uri);
+    const config = vscode.workspace.getConfiguration('miliastraLsp', uri ?? null);
     const hints = config.get<boolean>('hint.enable');
     return {
         platform: { type: 'standard' },
@@ -74,7 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
     function updateStatus() {
         status.text = service.isRunning() ? '千星奇域 LSP' : '千星奇域 LSP（已停止）';
         status.tooltip = '千星奇域 Luau 语言服务';
-        if (vscode.workspace.getConfiguration('miliastraLsp').get('window.statusBar')) {
+        if (vscode.workspace.getConfiguration('miliastraLsp', vscode.window.activeTextEditor?.document.uri ?? null).get('window.statusBar')) {
             status.show();
         } else {
             status.hide();

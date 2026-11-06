@@ -16,7 +16,7 @@ const vscode = require("vscode");
 const node_1 = require("vscode-languageclient/node");
 let client;
 function serverSettings(uri) {
-    const config = vscode.workspace.getConfiguration('miliastraLsp', uri);
+    const config = vscode.workspace.getConfiguration('miliastraLsp', uri !== null && uri !== void 0 ? uri : null);
     const hints = config.get('hint.enable');
     return {
         platform: { type: 'standard' },
@@ -81,9 +81,10 @@ function activate(context) {
         client = service;
         const status = vscode.window.createStatusBarItem();
         function updateStatus() {
+            var _a, _b;
             status.text = service.isRunning() ? '千星奇域 LSP' : '千星奇域 LSP（已停止）';
             status.tooltip = '千星奇域 Luau 语言服务';
-            if (vscode.workspace.getConfiguration('miliastraLsp').get('window.statusBar')) {
+            if (vscode.workspace.getConfiguration('miliastraLsp', (_b = (_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri) !== null && _b !== void 0 ? _b : null).get('window.statusBar')) {
                 status.show();
             }
             else {

@@ -49,6 +49,8 @@ local mask = 1 << 2
 mask |= panel.id & 7
 local control = game.GetClientUIControl(mask)
 control:SetVisible((mask >> 1) ~= 0)
+local easing: Enum.EaseType = Enum.EaseType.Linear
+game.Tween(control, {}, 1):SetEase(easing)
 return control
 """
     script.write_text(source, encoding="utf-8")
