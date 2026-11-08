@@ -218,12 +218,12 @@
 			}
 		]
 	},
-	"description": "千星奇域 Lua / Luau 语言服务，提供运行时 API 补全、跳转和类型诊断。",
+	"description": "千星奇域 Lua 语言服务，提供运行时 API 补全、跳转和类型诊断。",
 	"displayName": "千星奇域 Lua LSP",
 	"engines": {
 		"vscode": "^1.74.0"
 	},
-	"icon": "images/logo.png",
+	"icon": "images/miliastra-lua.png",
 	"keywords": [
 		"Lua",
 		"IntelliSense",
@@ -234,7 +234,7 @@
 	"main": "./client/out/extension",
 	"name": "miliastraLsp",
 	"publisher": "HarukaTea",
-	"version": "0.0.8",
+	"version": "0.1.0",
 	"dependencies": {
 		"vscode-languageclient": "8.0.2"
 	},

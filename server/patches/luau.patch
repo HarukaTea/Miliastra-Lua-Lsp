@@ -1,3 +1,19 @@
+diff --git a/Analysis/src/Linter.cpp b/Analysis/src/Linter.cpp
+--- a/Analysis/src/Linter.cpp
++++ b/Analysis/src/Linter.cpp
+@@ -987,6 +987,12 @@ private:
+             g.function = true;
+             g.location = expr->location;
+
++            // Miliastra's runtime looks up these global lifecycle callbacks by name.
++            const AstName name = expr->name;
++            if (name == "OnInit" || name == "OnStart" || name == "OnEnable" || name == "OnDisable" ||
++                name == "OnUpdate" || name == "OnLevelUpdate" || name == "OnDestroy")
++                g.used = true;
++
+             node->func->visit(this);
+
+             return false;
 diff --git a/Analysis/src/TableLiteralInference.cpp b/Analysis/src/TableLiteralInference.cpp
 index 2ff50e2..757d592 100644
 --- a/Analysis/src/TableLiteralInference.cpp

@@ -51,6 +51,13 @@ local control = game.GetClientUIControl(mask)
 control:SetVisible((mask >> 1) ~= 0)
 local easing: Enum.EaseType = Enum.EaseType.Linear
 game.Tween(control, {}, 1):SetEase(easing)
+function OnInit() end
+function OnStart() end
+function OnEnable() end
+function OnDisable() end
+function OnUpdate(dt: number) control:SetVisible(dt > 0) end
+function OnLevelUpdate(dt: number) end
+function OnDestroy() end
 return control
 """
     script.write_text(source, encoding="utf-8")
@@ -98,9 +105,15 @@ return control
         hover = request(5, "textDocument/hover", cursor(5, "SetVisible", 3))
         assert "仅设置可见性" in hover["contents"]["value"], hover
         send("textDocument/didChange", {"textDocument": dict(doc, version=2),
-             "contentChanges": [{"text": source.replace("GetClientUIControl(mask)", 'GetClientUIControl("bad")')}]})
+             "contentChanges": [{"text": source.replace("GetClientUIControl(mask)", 'GetClientUIControl("bad")')
+                                .replace("function OnInit()", "local function OnInit()")
+                                .replace("function OnStart()", "function OnCustom()")
+                                .replace("control:SetVisible(dt > 0)", 'control:SetVisible("bad")')}]})
         errors = request(6, "textDocument/diagnostic", dict(textDocument=doc))["items"]
         assert any(e["range"]["start"]["line"] == 4 and "number" in e["message"] for e in errors), errors
+        unused = [e["message"] for e in errors if e["code"] == 8]
+        assert len(unused) == 2 and any("'OnInit'" in m for m in unused) and any("'OnCustom'" in m for m in unused), errors
+        assert any(e["range"]["start"]["line"] == 12 and "boolean" in e["message"] for e in errors), errors
         request(7, "shutdown", None)
         send("exit", None)
         assert proc.wait(timeout=5) == 0
