@@ -185,7 +185,7 @@ index a18c14c..445c550 100644
      if (config.index.enabled && appliedFirstTimeConfiguration)
          frontend.parseModules(dirtyFiles);
 diff --git a/src/include/LSP/ClientConfiguration.hpp b/src/include/LSP/ClientConfiguration.hpp
-index 49653c8..8999a60 100644
+index 49653c8..95ab70f 100644
 --- a/src/include/LSP/ClientConfiguration.hpp
 +++ b/src/include/LSP/ClientConfiguration.hpp
 @@ -5,13 +5,14 @@
@@ -204,6 +204,15 @@ index 49653c8..8999a60 100644
  
  struct ClientRobloxSourcemapConfiguration
  {
+@@ -143,7 +144,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ClientCompletionImportsStringReq
+ struct ClientCompletionImportsConfiguration
+ {
+     /// Whether we should suggest automatic imports in completions
+-    bool enabled = true;
++    bool enabled = false;
+     /// Whether services should be suggested in auto-import
+     bool suggestServices = true;
+     /// When non-empty, only show the services listed when auto-importing
 @@ -192,6 +193,10 @@ struct ClientCompletionConfiguration
      bool addTabstopAfterParentheses = true;
      /// If parentheses are added, fill call arguments with parameter names
@@ -271,6 +280,29 @@ index b8d51ea..beeae97 100644
 -std::optional<Luau::TypeId> findCallMetamethod(Luau::TypeId type);
 \ No newline at end of file
 +std::optional<Luau::TypeId> findCallMetamethod(Luau::TypeId type);
+diff --git a/src/operations/CodeAction.cpp b/src/operations/CodeAction.cpp
+index d5fbfbd..f386293 100644
+--- a/src/operations/CodeAction.cpp
++++ b/src/operations/CodeAction.cpp
+@@ -349,7 +349,8 @@ lsp::CodeActionResult WorkspaceFolder::codeAction(const lsp::CodeActionParams& p
+ 
+             if (const auto* unknownSymbol = Luau::get_if<Luau::UnknownSymbol>(&error.data))
+             {
+-                platform->handleUnknownSymbolFix(unknownSymbolCtx, *unknownSymbol, diagnostic, result);
++                if (config.completion.suggestImports || config.completion.imports.enabled)
++                    platform->handleUnknownSymbolFix(unknownSymbolCtx, *unknownSymbol, diagnostic, result);
+             }
+             else if (const auto* misspelledProp = Luau::get_if<Luau::UnknownPropButFoundLikeProp>(&error.data))
+             {
+@@ -442,7 +443,7 @@ lsp::CodeActionResult WorkspaceFolder::codeAction(const lsp::CodeActionParams& p
+         }
+ 
+         // Add "Add all missing requires" source action
+-        if (!cr.errors.empty())
++        if (!cr.errors.empty() && (config.completion.suggestImports || config.completion.imports.enabled))
+         {
+             UnknownSymbolFixContext ctx{
+                 params.textDocument.uri,
 diff --git a/src/operations/Completion.cpp b/src/operations/Completion.cpp
 index c95d4d6..24d592e 100644
 --- a/src/operations/Completion.cpp

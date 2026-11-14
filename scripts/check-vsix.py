@@ -254,6 +254,15 @@ assert(string.match("{", "[%{%}]"))
         unused = [e["message"] for e in overridden if e["code"] == 8]
         assert len(unused) == 2 and any("'OnInit'" in m for m in unused) and any("'OnCustom'" in m for m in unused), overridden
         assert any(e["range"]["start"]["line"] == 3 and "number" in e["message"] for e in overridden), overridden
+        no_import = {"uri": (workspace / "no-import.lua").as_uri()}
+        send("textDocument/didOpen", {"textDocument": dict(no_import, languageId="lua", version=1,
+             text='--!strict\nprint(panel)\n')})
+        items = request(37, "textDocument/completion", dict(textDocument=no_import, position={"line": 1, "character": 11}))
+        assert not any(i["label"] == "panel" and i.get("additionalTextEdits") for i in items), items
+        actions = request(38, "textDocument/codeAction", dict(textDocument=no_import,
+            range={"start": {"line": 1, "character": 6}, "end": {"line": 1, "character": 11}},
+            context={"diagnostics": []}))
+        assert not any(a["title"].startswith("Add require") or a["title"] == "Add all missing requires" for a in actions), actions
         outside = {"uri": (root / "game-other" / "main.lua").as_uri()}
         send("textDocument/didOpen", {"textDocument": dict(outside, languageId="lua", version=1,
              text='--!strict\nlocal value: number = "bad"\nreturn value')})
