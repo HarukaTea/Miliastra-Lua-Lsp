@@ -15,6 +15,67 @@ index 7b7590f..ebe756a 100644
  
  
  
+diff --git a/src/Client.cpp b/src/Client.cpp
+index 7e13b3c..a54bb38 100644
+--- a/src/Client.cpp
++++ b/src/Client.cpp
+@@ -199,14 +199,14 @@ void LSPClient::requestConfiguration(const std::vector<lsp::DocumentUri>& uris)
+                     if (!configIt->is_null())
+                         config = *configIt;
+ 
+-                    ClientConfiguration* oldConfig = nullptr;
++                    std::optional<ClientConfiguration> oldConfig;
+                     if (auto it = configStore.find(uri); it != configStore.end())
+-                        oldConfig = &it->second;
++                        oldConfig = it->second;
+ 
+                     configStore.insert_or_assign(uri, config);
+                     sendLogMessage(lsp::MessageType::Info, "loaded configuration for " + uri.toString());
+                     if (configChangedCallback)
+-                        configChangedCallback(uri, config, oldConfig);
++                        configChangedCallback(uri, config, oldConfig ? &*oldConfig : nullptr);
+                     ++workspaceIt;
+                     ++configIt;
+                 }
+diff --git a/src/LanguageServer.cpp b/src/LanguageServer.cpp
+index 4d8833e..823b60d 100644
+--- a/src/LanguageServer.cpp
++++ b/src/LanguageServer.cpp
+@@ -53,20 +53,18 @@ WorkspaceFolderPtr LanguageServer::findWorkspace(const lsp::DocumentUri& file, b
+ 
+     WorkspaceFolderPtr bestWorkspace = nullptr;
+     size_t length = 0;
+-    auto checkStr = file.toString();
+ 
+     for (auto& workspace : workspaceFolders)
+     {
+         if (file == workspace->rootUri)
+             return workspace;
+ 
+-        // Check if the root uri is a prefix of the file
+-        auto prefixStr = workspace->rootUri.toString();
+-        auto size = prefixStr.size();
++        // Match complete path components, using the URI's platform-specific case rules.
++        auto size = workspace->rootUri.path.size();
+         if (size < length)
+             continue;
+ 
+-        if (checkStr.compare(0, size, prefixStr) == 0)
++        if (workspace->rootUri.isAncestorOf(file))
+         {
+             bestWorkspace = workspace;
+             length = size;
+@@ -765,6 +763,10 @@ void LanguageServer::onInitialized([[maybe_unused]] const lsp::InitializedParams
+         if (!workspace->isReady)
+             return;
+ 
++        // A changed package.path can resolve every existing require to a different module.
++        if (oldConfig && oldConfig->require.modulePaths != config.require.modulePaths)
++            workspace->frontend.clear();
++
+         // Update the workspace setup with the new configuration
+         workspace->setupWithConfiguration(config);
+ 
 diff --git a/src/LuauExt.cpp b/src/LuauExt.cpp
 index 953ef01..109766a 100644
 --- a/src/LuauExt.cpp
@@ -58,8 +119,73 @@ index 2895b13..80c5d61 100644
  #include "Luau/Common.h"
  
  #ifdef _WIN32
+diff --git a/src/Uri.cpp b/src/Uri.cpp
+index c438b5c..88b753c 100644
+--- a/src/Uri.cpp
++++ b/src/Uri.cpp
+@@ -396,6 +396,8 @@ std::string Uri::fsPath() const
+     }
+ #ifdef _WIN32
+     std::replace(value.begin(), value.end(), '/', '\\');
++    if (value.length() >= 2 && value[1] == ':' && value[0] >= 'A' && value[0] <= 'Z')
++        value[0] = tolower(value[0]);
+ #endif
+     return value;
+ }
+@@ -658,10 +660,12 @@ bool Uri::isAncestorOf(const Uri& other) const
+     auto parentLower = toLower(normalizedParent);
+     auto childLower = toLower(normalizedChild);
+     // Ensure separator boundary: parent path must be followed by '/' or be an exact match
+-    return Luau::startsWith(childLower, parentLower) && (childLower.size() == parentLower.size() || childLower[parentLower.size()] == '/');
++    return Luau::startsWith(childLower, parentLower) &&
++           (childLower.size() == parentLower.size() || (!parentLower.empty() && parentLower.back() == '/') || childLower[parentLower.size()] == '/');
+ #else
+     return Luau::startsWith(normalizedChild, normalizedParent) &&
+-           (normalizedChild.size() == normalizedParent.size() || normalizedChild[normalizedParent.size()] == '/');
++           (normalizedChild.size() == normalizedParent.size() || (!normalizedParent.empty() && normalizedParent.back() == '/') ||
++               normalizedChild[normalizedParent.size()] == '/');
+ #endif
+ }
+ 
+diff --git a/src/Workspace.cpp b/src/Workspace.cpp
+index a18c14c..445c550 100644
+--- a/src/Workspace.cpp
++++ b/src/Workspace.cpp
+@@ -206,6 +206,7 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+     std::vector<Luau::ModuleName> deletedModules;
+     std::vector<Uri> deletedFiles;
+     bool pluginFileChanged = false;
++    bool moduleCreated = false;
+ 
+     for (const auto& change : changes)
+     {
+@@ -234,6 +235,12 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+ 
+             auto moduleName = fileResolver.getModuleName(change.uri);
+ 
++            if (change.type == lsp::FileChangeType::Created)
++            {
++                moduleCreated = true;
++                dirtyFiles.push_back(moduleName);
++            }
++
+             if (change.type == lsp::FileChangeType::Deleted)
+             {
+                 // Fully erase the module from the frontend's caches (including `sourceNodes`, which
+@@ -256,6 +263,11 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+     if (!deletedModules.empty())
+         frontend.clearModules(deletedModules);
+ 
++    // A new file can satisfy an unresolved require or take precedence over its old target.
++    if (moduleCreated)
++        for (const auto& [moduleName, node] : frontend.sourceNodes)
++            frontend.markDirty(moduleName, &dirtyFiles);
++
+     // Parse require graph for files if indexing enable
+     if (config.index.enabled && appliedFirstTimeConfiguration)
+         frontend.parseModules(dirtyFiles);
 diff --git a/src/include/LSP/ClientConfiguration.hpp b/src/include/LSP/ClientConfiguration.hpp
-index 49653c8..d13ebf8 100644
+index 49653c8..8999a60 100644
 --- a/src/include/LSP/ClientConfiguration.hpp
 +++ b/src/include/LSP/ClientConfiguration.hpp
 @@ -5,13 +5,14 @@
@@ -78,7 +204,29 @@ index 49653c8..d13ebf8 100644
  
  struct ClientRobloxSourcemapConfiguration
  {
-@@ -221,9 +222,10 @@ struct ClientRequireConfiguration
+@@ -192,6 +193,10 @@ struct ClientCompletionConfiguration
+     bool addTabstopAfterParentheses = true;
+     /// If parentheses are added, fill call arguments with parameter names
+     bool fillCallArguments = true;
++    /// Whether to show parameter names beside function completion labels
++    bool showParams = true;
++    /// Whether to suggest methods after a dot and insert the required colon
++    bool alwaysShowMethods = false;
+     /// Whether to show non-function properties when performing a method call with a colon
+     bool showPropertiesOnMethodCall = false;
+     /// Whether to show keywords (`if` / `then` / `and` / etc.) during autocomplete
+@@ -207,8 +212,8 @@ struct ClientCompletionConfiguration
+     bool enableFragmentAutocomplete = true;
+ };
+ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ClientCompletionConfiguration, enabled, autocompleteEnd, suggestImports, imports, addParentheses,
+-    addTabstopAfterParentheses, fillCallArguments, showPropertiesOnMethodCall, showKeywords, showAnonymousAutofilledFunction, anonymousAutofilledFunction,
+-    showDeprecatedItems, enableFragmentAutocomplete);
++    addTabstopAfterParentheses, fillCallArguments, showParams, alwaysShowMethods, showPropertiesOnMethodCall, showKeywords, showAnonymousAutofilledFunction,
++    anonymousAutofilledFunction, showDeprecatedItems, enableFragmentAutocomplete);
+ 
+ struct ClientSignatureHelpConfiguration
+ {
+@@ -221,9 +226,10 @@ struct ClientRequireConfiguration
  {
      // DEPRECATED: USE NEW REQUIRE-BY-STRING SEMANTICS INSTEAD.
      bool useOriginalRequireByStringSemantics = false;
@@ -90,7 +238,7 @@ index 49653c8..d13ebf8 100644
  
  struct ClientIndexConfiguration
  {
-@@ -302,7 +304,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(LSPPlatformConfig, {
+@@ -302,7 +308,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(LSPPlatformConfig, {
  
  struct ClientPlatformConfiguration
  {
@@ -99,6 +247,151 @@ index 49653c8..d13ebf8 100644
  };
  
  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ClientPlatformConfiguration, type);
+diff --git a/src/include/LSP/LuauExt.hpp b/src/include/LSP/LuauExt.hpp
+index b8d51ea..beeae97 100644
+--- a/src/include/LSP/LuauExt.hpp
++++ b/src/include/LSP/LuauExt.hpp
+@@ -12,6 +12,12 @@
+ 
+ namespace types
+ {
++// makeBitCall uses the full expression as argLocation; real call arguments start after the callee.
++inline bool isSyntheticBitCall(const Luau::AstExprCall* call)
++{
++    return call->argLocation == call->location;
++}
++
+ std::optional<std::string> getTypeName(Luau::TypeId typeId);
+ 
+ bool isMetamethod(const Luau::Name& name);
+@@ -78,4 +84,4 @@ bool isGetService(const Luau::AstExpr* expr);
+ bool isRequire(const Luau::AstExpr* expr);
+ bool isMethod(const Luau::FunctionType* ftv);
+ bool isOverloadedMethod(Luau::TypeId ty);
+-std::optional<Luau::TypeId> findCallMetamethod(Luau::TypeId type);
+\ No newline at end of file
++std::optional<Luau::TypeId> findCallMetamethod(Luau::TypeId type);
+diff --git a/src/operations/Completion.cpp b/src/operations/Completion.cpp
+index c95d4d6..24d592e 100644
+--- a/src/operations/Completion.cpp
++++ b/src/operations/Completion.cpp
+@@ -801,6 +801,9 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+ 
+     for (auto& [name, entry] : result.entryMap)
+     {
++        if (!config.completion.alwaysShowMethods && entry.replaceDotWithColon)
++            continue;
++
+         // If this entry is a non-function property, and we are autocompleting after a `:`
+         // then hide it if configured to do so
+         if (!config.completion.showPropertiesOnMethodCall && entry.kind == Luau::AutocompleteEntryKind::Property && entry.indexedWithSelf &&
+@@ -900,10 +903,20 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+                 // For some reason, the above text edit can't handle replacing the index operator
+                 // Hence we remove it using an additional text edit
+                 item.additionalTextEdits.emplace_back(lsp::TextEdit{
+-                    {textDocument->convertPosition(indexName->opPosition), {indexName->opPosition.line, indexName->opPosition.column + 1U}}, ""});
++                    {textDocument->convertPosition(indexName->opPosition),
++                        textDocument->convertPosition(Luau::Position{indexName->opPosition.line, indexName->opPosition.column + 1U})}, ""});
+             }
+         }
+ 
++        if (entry.replaceDotWithColon && isIdentifier(name) && !result.ancestry.empty())
++        {
++            if (auto indexName = result.ancestry.back()->as<Luau::AstExprIndexName>())
++                item.additionalTextEdits.emplace_back(lsp::TextEdit{
++                    {textDocument->convertPosition(indexName->opPosition),
++                        textDocument->convertPosition(Luau::Position{indexName->opPosition.line, indexName->opPosition.column + 1U})},
++                    ":"});
++        }
++
+         // If autocompleting in a string and the autocompleting text contains a '/' character, then it won't replace correctly due to word boundaries
+         // Apply a complete text edit instead
+         if (name.find('/') != std::string::npos && result.context == Luau::AutocompleteContext::String &&
+@@ -922,27 +935,16 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+         }
+ 
+         // Handle parentheses suggestions
++        std::string parentheses;
+         if (config.completion.addParentheses)
+         {
+             if (canUseSnippets(client->capabilities))
+             {
+                 if (entry.parens == Luau::ParenthesesRecommendation::CursorAfter)
+-                {
+-                    if (item.textEdit)
+-                        item.textEdit->newText += "()$0";
+-                    else
+-                        item.insertText = name + "()$0";
+-                    item.insertTextFormat = lsp::InsertTextFormat::Snippet;
+-                }
++                    parentheses = "()$0";
+                 else if (entry.parens == Luau::ParenthesesRecommendation::CursorInside)
+                 {
+-                    std::string parenthesesSnippet = config.completion.addTabstopAfterParentheses ? "($1)$0" : "($0)";
+-
+-                    if (item.textEdit)
+-                        item.textEdit->newText += parenthesesSnippet;
+-                    else
+-                        item.insertText = name + parenthesesSnippet;
+-                    item.insertTextFormat = lsp::InsertTextFormat::Snippet;
++                    parentheses = config.completion.addTabstopAfterParentheses ? "($1)$0" : "($0)";
+                     // Trigger Signature Help
+                     item.command = lsp::Command{"Trigger Signature Help", "editor.action.triggerParameterHints"};
+                 }
+@@ -951,12 +953,7 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+             {
+                 // We don't support snippets, so just add parentheses
+                 if (entry.parens == Luau::ParenthesesRecommendation::CursorAfter || entry.parens == Luau::ParenthesesRecommendation::CursorInside)
+-                {
+-                    if (item.textEdit)
+-                        item.textEdit->newText += "()";
+-                    else
+-                        item.insertText = name + "()";
+-                }
++                    parentheses = "()";
+             }
+         }
+ 
+@@ -971,7 +968,8 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+             {
+                 // Compute label details and more detailed parentheses snippet
+                 auto [detail, parenthesesSnippet] = computeLabelDetailsForFunction(entry, ftv);
+-                item.labelDetails = {detail};
++                if (config.completion.showParams)
++                    item.labelDetails = {detail};
+ 
+                 // If we had CursorAfter, then the function call would not have any arguments
+                 if (canUseSnippets(client->capabilities) && config.completion.addParentheses && config.completion.fillCallArguments &&
+@@ -980,17 +978,23 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+                     if (config.completion.addTabstopAfterParentheses)
+                         parenthesesSnippet += "$0";
+ 
+-                    if (item.textEdit)
+-                        item.textEdit->newText += parenthesesSnippet;
+-                    else
+-                        item.insertText = name + parenthesesSnippet;
+-
+-                    item.insertTextFormat = lsp::InsertTextFormat::Snippet;
++                    parentheses = parenthesesSnippet;
+                     item.command = lsp::Command{"Trigger Signature Help", "editor.action.triggerParameterHints"};
+                 }
+             }
+         }
+ 
++        // Append only the final choice, including when completion uses a text edit.
++        if (!parentheses.empty())
++        {
++            if (item.textEdit)
++                item.textEdit->newText += parentheses;
++            else
++                item.insertText = name + parentheses;
++            if (canUseSnippets(client->capabilities))
++                item.insertTextFormat = lsp::InsertTextFormat::Snippet;
++        }
++
+         items.emplace_back(item);
+     }
+ 
 diff --git a/src/operations/Diagnostics.cpp b/src/operations/Diagnostics.cpp
 index 9a91726..c8e40f1 100644
 --- a/src/operations/Diagnostics.cpp
@@ -121,17 +414,102 @@ index 9a91726..c8e40f1 100644
          {
              workspaceReport.items.emplace_back(documentReport);
              continue;
+diff --git a/src/operations/InlayHints.cpp b/src/operations/InlayHints.cpp
+index 85f57a8..91ac53a 100644
+--- a/src/operations/InlayHints.cpp
++++ b/src/operations/InlayHints.cpp
+@@ -311,6 +311,9 @@ struct InlayHintVisitor : public Luau::AstVisitor
+ 
+     bool visit(Luau::AstExprCall* call) override
+     {
++        if (types::isSyntheticBitCall(call))
++            return true;
++
+         if (config.inlayHints.parameterNames == InlayHintsParameterNamesConfig::None)
+             return true;
+ 
+diff --git a/src/operations/Refactoring.cpp b/src/operations/Refactoring.cpp
+index 388008c..8a0860f 100644
+--- a/src/operations/Refactoring.cpp
++++ b/src/operations/Refactoring.cpp
+@@ -685,7 +685,7 @@ lsp::CodeAction resolveRefactoring(
+             auto& pos = *refactorResult->renamePosition;
+             resolved.command = lsp::Command{
+                 "Rename Symbol",
+-                "luau-lsp.rename",
++                "miliastraLsp.rename",
+                 {nlohmann::json(uri.toString()), nlohmann::json(pos)},
+             };
+         }
+diff --git a/src/operations/SemanticTokens.cpp b/src/operations/SemanticTokens.cpp
+index 1a80b7e..8f83f51 100644
+--- a/src/operations/SemanticTokens.cpp
++++ b/src/operations/SemanticTokens.cpp
+@@ -244,6 +244,15 @@ struct SemanticTokensVisitor : public Luau::AstVisitor
+         return true;
+     }
+ 
++    bool visit(Luau::AstExprCall* call) override
++    {
++        if (!types::isSyntheticBitCall(call))
++            return true;
++        for (auto arg : call->args)
++            arg->visit(this);
++        return false;
++    }
++
+     bool visit(Luau::AstExprGlobal* global) override
+     {
+         auto it = builtinGlobals.find(global->name);
+@@ -379,6 +388,10 @@ std::vector<size_t> packTokens(const TextDocument* textDocument, std::vector<Sem
+             return a.start < b.start;
+         });
+ 
++    // Compound bit assignments reuse the left operand in the generated call.
++    tokens.erase(std::unique(tokens.begin(), tokens.end(), [](const SemanticToken& a, const SemanticToken& b)
++        { return a.start == b.start && a.end == b.end && a.tokenType == b.tokenType && a.tokenModifiers == b.tokenModifiers; }), tokens.end());
++
+     // Pack the tokens
+     std::vector<size_t> result{};
+     result.reserve(tokens.size() * 5); // Each token will take up 5 slots in the result
+diff --git a/src/operations/SignatureHelp.cpp b/src/operations/SignatureHelp.cpp
+index 8e92296..3049ae6 100644
+--- a/src/operations/SignatureHelp.cpp
++++ b/src/operations/SignatureHelp.cpp
+@@ -79,9 +79,17 @@ std::optional<lsp::SignatureHelp> WorkspaceFolder::signatureHelp(
+     if (ancestry.size() == 0 || !scope)
+         return std::nullopt;
+ 
+-    auto* candidate = ancestry.back()->as<Luau::AstExprCall>();
+-    if (!candidate && ancestry.size() >= 2)
+-        candidate = ancestry.at(ancestry.size() - 2)->as<Luau::AstExprCall>();
++    Luau::AstExprCall* candidate = nullptr;
++    for (auto it = ancestry.rbegin(); it != ancestry.rend(); ++it)
++    {
++        if (auto call = (*it)->as<Luau::AstExprCall>(); call && !types::isSyntheticBitCall(call))
++        {
++            candidate = call;
++            break;
++        }
++        if ((*it)->is<Luau::AstExprFunction>())
++            break;
++    }
+ 
+     if (!candidate)
+         return std::nullopt;
 diff --git a/src/platform/LSPPlatform.cpp b/src/platform/LSPPlatform.cpp
-index d1e1b6f..1f67479 100644
+index d1e1b6f..eac04b6 100644
 --- a/src/platform/LSPPlatform.cpp
 +++ b/src/platform/LSPPlatform.cpp
-@@ -153,6 +153,25 @@ std::optional<Luau::ModuleInfo> LSPPlatform::resolveStringRequire(
+@@ -153,6 +153,27 @@ std::optional<Luau::ModuleInfo> LSPPlatform::resolveStringRequire(
              return std::nullopt;
      }
  
-+    // Lua package.path templates apply to bare module names. Explicit relative
-+    // paths and @aliases continue through the standard Luau resolver below.
-+    if (!requiredString.empty() && requiredString.find_first_of("/\\@") == std::string::npos &&
++    // Lua package.path templates also accept module names such as "ui/panel".
++    // Explicit paths and @aliases continue through the standard Luau resolver below.
++    const bool explicitPath = Luau::FileUtils::isAbsolutePath(requiredString) || Luau::startsWith(requiredString, "./") ||
++        Luau::startsWith(requiredString, "../") || Luau::startsWith(requiredString, ".\\") || Luau::startsWith(requiredString, "..\\");
++    if (!requiredString.empty() && !explicitPath && requiredString.front() != '@' &&
 +        !endsWith(requiredString, ".lua") && !endsWith(requiredString, ".luau"))
 +    {
 +        std::string module = requiredString;

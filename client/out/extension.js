@@ -15,6 +15,7 @@ const path = require("path");
 const vscode = require("vscode");
 const node_1 = require("vscode-languageclient/node");
 let client;
+let clientLifecycle = Promise.resolve();
 function serverSettings(uri) {
     const config = vscode.workspace.getConfiguration('miliastraLsp', uri !== null && uri !== void 0 ? uri : null);
     const hints = config.get('hint.enable');
@@ -29,9 +30,9 @@ function serverSettings(uri) {
         completion: {
             enabled: config.get('completion.enable'),
             addParentheses: config.get('completion.callParenthesess'),
-            fillCallArguments: config.get('completion.showParams'),
+            showParams: config.get('completion.showParams'),
             autocompleteEnd: config.get('completion.endAutocompletion'),
-            showPropertiesOnMethodCall: config.get('completion.alwaysShowMethods'),
+            alwaysShowMethods: config.get('completion.alwaysShowMethods'),
             showDeprecatedItems: config.get('completion.deprecatedMembers'),
         },
         signatureHelp: { enabled: config.get('signatureHelp.enable') },
@@ -79,6 +80,18 @@ function activate(context) {
         ];
         const service = new node_1.LanguageClient('miliastraLsp', '千星奇域 Luau LSP', { command, args }, options);
         client = service;
+        context.subscriptions.push(service.onNotification('$/command', (params) => {
+            if (params.command === 'cursorMove') {
+                return vscode.commands.executeCommand('cursorMove', params.data);
+            }
+        }), vscode.commands.registerCommand('miliastraLsp.rename', (uri, position) => __awaiter(this, void 0, void 0, function* () {
+            const editor = vscode.window.activeTextEditor;
+            if (editor && editor.document.uri.toString() === vscode.Uri.parse(uri).toString()) {
+                const pos = new vscode.Position(position.line, position.character);
+                editor.selection = new vscode.Selection(pos, pos);
+                yield vscode.commands.executeCommand('editor.action.rename');
+            }
+        })));
         const status = vscode.window.createStatusBarItem();
         function updateStatus() {
             var _a, _b;
@@ -91,21 +104,35 @@ function activate(context) {
                 status.hide();
             }
         }
-        context.subscriptions.push(status, service.onDidChangeState(updateStatus), vscode.workspace.onDidChangeConfiguration(event => {
+        context.subscriptions.push(status, service.onDidChangeState(updateStatus), vscode.window.onDidChangeActiveTextEditor(updateStatus), vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            // The native server advertises changeNotifications=false; restart to resync folders and open buffers.
+            clientLifecycle = clientLifecycle.then(() => __awaiter(this, void 0, void 0, function* () {
+                yield service.stop();
+                yield service.start();
+            })).catch(error => service.error('更新千星奇域语言服务的工作区失败', error, 'force'));
+        }), vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('miliastraLsp')) {
                 updateStatus();
                 if (service.state === node_1.State.Running) {
+                    if (event.affectsConfiguration('miliastraLsp.color.mode')) {
+                        const feature = service.getFeature(node_1.SemanticTokensRegistrationType.method);
+                        const providers = new Set(vscode.workspace.textDocuments.map(document => feature.getProvider(document)));
+                        for (const provider of providers) {
+                            provider === null || provider === void 0 ? void 0 : provider.onDidChangeSemanticTokensEmitter.fire();
+                        }
+                    }
                     void service.sendNotification('workspace/didChangeConfiguration', { settings: {} });
                 }
             }
         }));
-        yield service.start();
+        clientLifecycle = service.start();
+        yield clientLifecycle;
         updateStatus();
     });
 }
 exports.activate = activate;
 function deactivate() {
-    return client === null || client === void 0 ? void 0 : client.stop();
+    return clientLifecycle.then(() => client === null || client === void 0 ? void 0 : client.stop());
 }
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map

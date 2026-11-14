@@ -53,7 +53,7 @@ index 15ff0ee..611ee4c 100644
      Allocator& allocator;
  
 diff --git a/Ast/src/Parser.cpp b/Ast/src/Parser.cpp
-index 9aba25a..6ee66a2 100644
+index 9aba25a..79d44e2 100644
 --- a/Ast/src/Parser.cpp
 +++ b/Ast/src/Parser.cpp
 @@ -311,6 +311,7 @@ ParseNodeResult<AstType> Parser::parseType(const char* buffer, size_t bufferSize
@@ -82,7 +82,7 @@ index 9aba25a..6ee66a2 100644
      if (std::optional<AstExprBinary::Op> op = parseCompoundOp(lexer.current()))
          return parseCompoundAssignment(expr, *op);
  
-@@ -3541,6 +3553,65 @@ std::optional<AstExprUnary::Op> Parser::parseUnaryOp(const Lexeme& l)
+@@ -3541,6 +3553,80 @@ std::optional<AstExprUnary::Op> Parser::parseUnaryOp(const Lexeme& l)
          return std::nullopt;
  }
  
@@ -121,14 +121,29 @@ index 9aba25a..6ee66a2 100644
 +    if (probe.next().type != '<')
 +        return false;
 +    unsigned int depth = 2;
++    unsigned int brackets = 0;
 +    for (;;)
 +    {
 +        const auto& token = probe.next();
-+        if (token.type == '<')
++        if (token.type == Lexeme::Eof)
++            return false;
++        // typeof expressions can contain literals, comparisons and function bodies.
++        // Only inspect angle brackets and expression boundaries outside nested delimiters.
++        if (token.type == '(' || token.type == '{' || token.type == '[')
++            ++brackets;
++        else if (token.type == ')' || token.type == '}' || token.type == ']')
++        {
++            if (brackets == 0)
++                return false;
++            --brackets;
++        }
++        else if (brackets != 0)
++            continue;
++        else if (token.type == '<')
 +            ++depth;
 +        else if (token.type == '>' && --depth == 0)
 +            return probe.next().type == '(';
-+        else if (token.type == Lexeme::Eof || token.type == Lexeme::Number || token.type == '=' ||
++        else if (token.type == Lexeme::Number || token.type == '=' ||
 +                 token.type == ';' || token.type == Lexeme::ReservedLocal || token.type == Lexeme::ReservedReturn)
 +            return false;
 +    }
@@ -148,7 +163,7 @@ index 9aba25a..6ee66a2 100644
  std::optional<AstExprBinary::Op> Parser::parseBinaryOp(const Lexeme& l)
  {
      if (l.type == '+')
-@@ -3661,14 +3732,14 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
+@@ -3661,14 +3747,14 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
  AstExpr* Parser::parseExpr(unsigned int limit)
  {
      static const BinaryOpPriority binaryPriority[] = {
@@ -171,7 +186,7 @@ index 9aba25a..6ee66a2 100644
          {3, 3},  // inequality
          {3, 3},  // equality
          {3, 3},  // '<'
-@@ -3686,7 +3757,7 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+@@ -3686,7 +3772,7 @@ AstExpr* Parser::parseExpr(unsigned int limit)
      // this handles recursive calls to parseSubExpr/parseExpr
      incrementRecursionCounter("expression");
  
@@ -180,7 +195,7 @@ index 9aba25a..6ee66a2 100644
  
      Location start = lexer.current().location;
  
-@@ -3697,7 +3768,13 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+@@ -3697,7 +3783,13 @@ AstExpr* Parser::parseExpr(unsigned int limit)
      if (!uop)
          uop = checkUnaryConfusables();
  
@@ -195,7 +210,7 @@ index 9aba25a..6ee66a2 100644
      {
          Position opPosition = lexer.current().location.begin;
          nextLexeme();
-@@ -3714,26 +3791,36 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+@@ -3714,26 +3806,36 @@ AstExpr* Parser::parseExpr(unsigned int limit)
      }
  
      // expand while operators have priorities higher than `limit'
@@ -251,7 +266,7 @@ index 9aba25a..6ee66a2 100644
  
          // note: while the parser isn't recursive here, we're generating recursive structures of unbounded depth
          incrementRecursionCounter("expression");
-@@ -3854,7 +3941,7 @@ AstExpr* Parser::parsePrimaryExpr(bool asStatement)
+@@ -3854,7 +3956,7 @@ AstExpr* Parser::parsePrimaryExpr(bool asStatement)
          {
              expr = parseFunctionArgs(expr, false);
          }

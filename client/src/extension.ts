@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { LanguageClient, LanguageClientOptions, State } from 'vscode-languageclient/node';
+import { LanguageClient, LanguageClientOptions, SemanticTokensRegistrationType, State } from 'vscode-languageclient/node';
 
 let client: LanguageClient | undefined;
+let clientLifecycle: Promise<void> = Promise.resolve();
 
 function serverSettings(uri?: vscode.Uri) {
     const config = vscode.workspace.getConfiguration('miliastraLsp', uri ?? null);
@@ -19,9 +20,9 @@ function serverSettings(uri?: vscode.Uri) {
         completion: {
             enabled: config.get<boolean>('completion.enable'),
             addParentheses: config.get<boolean>('completion.callParenthesess'),
-            fillCallArguments: config.get<boolean>('completion.showParams'),
+            showParams: config.get<boolean>('completion.showParams'),
             autocompleteEnd: config.get<boolean>('completion.endAutocompletion'),
-            showPropertiesOnMethodCall: config.get<boolean>('completion.alwaysShowMethods'),
+            alwaysShowMethods: config.get<boolean>('completion.alwaysShowMethods'),
             showDeprecatedItems: config.get<boolean>('completion.deprecatedMembers'),
         },
         signatureHelp: { enabled: config.get<boolean>('signatureHelp.enable') },
@@ -70,6 +71,21 @@ export async function activate(context: vscode.ExtensionContext) {
     ];
     const service = new LanguageClient('miliastraLsp', '千星奇域 Luau LSP', { command, args }, options);
     client = service;
+    context.subscriptions.push(
+        service.onNotification('$/command', (params) => {
+            if (params.command === 'cursorMove') {
+                return vscode.commands.executeCommand('cursorMove', params.data);
+            }
+        }),
+        vscode.commands.registerCommand('miliastraLsp.rename', async (uri: string, position: { line: number; character: number }) => {
+            const editor = vscode.window.activeTextEditor;
+            if (editor && editor.document.uri.toString() === vscode.Uri.parse(uri).toString()) {
+                const pos = new vscode.Position(position.line, position.character);
+                editor.selection = new vscode.Selection(pos, pos);
+                await vscode.commands.executeCommand('editor.action.rename');
+            }
+        }),
+    );
     const status = vscode.window.createStatusBarItem();
     function updateStatus() {
         status.text = service.isRunning() ? '千星奇域 LSP' : '千星奇域 LSP（已停止）';
@@ -81,18 +97,34 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }
     context.subscriptions.push(status, service.onDidChangeState(updateStatus),
+        vscode.window.onDidChangeActiveTextEditor(updateStatus),
+        vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            // The native server advertises changeNotifications=false; restart to resync folders and open buffers.
+            clientLifecycle = clientLifecycle.then(async () => {
+                await service.stop();
+                await service.start();
+            }).catch(error => service.error('更新千星奇域语言服务的工作区失败', error, 'force'));
+        }),
         vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('miliastraLsp')) {
                 updateStatus();
                 if (service.state === State.Running) {
+                    if (event.affectsConfiguration('miliastraLsp.color.mode')) {
+                        const feature = service.getFeature(SemanticTokensRegistrationType.method);
+                        const providers = new Set(vscode.workspace.textDocuments.map(document => feature.getProvider(document)));
+                        for (const provider of providers) {
+                            provider?.onDidChangeSemanticTokensEmitter.fire();
+                        }
+                    }
                     void service.sendNotification('workspace/didChangeConfiguration', { settings: {} });
                 }
             }
         }));
-    await service.start();
+    clientLifecycle = service.start();
+    await clientLifecycle;
     updateStatus();
 }
 
 export function deactivate() {
-    return client?.stop();
+    return clientLifecycle.then(() => client?.stop());
 }

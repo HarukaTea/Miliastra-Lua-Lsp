@@ -707,32 +707,32 @@ declare extern type Script with
     function GetParam(self, paramName: string): any
     function Invoke(self, funcName: string, ...: any): ()
     function EnableUpdate(self, enabled: boolean): ()
-    function RegisterServerSignalHandler(self, signalName: string, callback: () -> ()): ()
+    function RegisterServerSignalHandler(self, signalName: string, callback: (signalName: string, signalParams: {any}) -> ()): ()
     function UnregisterServerSignalHandler(self, signalName: string): ()
-    function RegisterCustomVariableChangedHandler(self, entityType: EnumCustomVariableEntityType, customVariableName: string, callback: () -> ()): ()
+    function RegisterCustomVariableChangedHandler(self, entityType: EnumCustomVariableEntityType, customVariableName: string, callback: (entityType: EnumCustomVariableEntityType, customVariableName: string) -> ()): ()
     function UnregisterCustomVariableChangedHandler(self, entityType: EnumCustomVariableEntityType, customVariableName: string): ()
 end
 
 declare extern type ServerSignal with
     function AddParam(self, paramType: EnumParamType, paramValue: any): ()
     function SendSignal(self): ()
-    function AddFloatList(self, floatListValue: number): ()
+    function AddFloatList(self, floatListValue: {number}): ()
     function AddVector3(self, vector3Value: {[any]: any}): ()
-    function AddIntList(self, intListValue: number): ()
-    function AddBoolList(self, boolListValue: boolean): ()
-    function AddPrefabIdList(self, prefabIdListValue: number): ()
+    function AddIntList(self, intListValue: {number}): ()
+    function AddBoolList(self, boolListValue: {boolean}): ()
+    function AddPrefabIdList(self, prefabIdListValue: {number}): ()
     function AddConfigId(self, configIdValue: number): ()
-    function AddVector3List(self, vector3ListValue: {[any]: any}): ()
+    function AddVector3List(self, vector3ListValue: {{[any]: any}}): ()
     function AddString(self, stringValue: string): ()
-    function AddGuidList(self, guidListValue: number): ()
-    function AddEntityList(self, entityListValue: number): ()
+    function AddGuidList(self, guidListValue: {number}): ()
+    function AddEntityList(self, entityListValue: {number}): ()
     function AddEntity(self, entityValue: number): ()
-    function AddConfigIdList(self, configIdListValue: number): ()
+    function AddConfigIdList(self, configIdListValue: {number}): ()
     function AddPrefabId(self, prefabIdValue: number): ()
     function AddInt(self, intValue: number): ()
     function AddFloat(self, floatValue: number): ()
     function AddBool(self, boolValue: boolean): ()
-    function AddStringList(self, stringListValue: string): ()
+    function AddStringList(self, stringListValue: {string}): ()
     function AddGuid(self, guidValue: number): ()
 end
 
@@ -786,10 +786,10 @@ end
 declare extern type ClientUICursorEventAreaControl extends ClientUIBaseControl with
     raycastTarget: boolean
     function AddCursorEventListener(self, eventType: EnumCursorEventType, callback: (data: CursorEventData) -> ()): ()
-    function RemoveCursorEventListener(self, eventType: EnumCursorEventType, callback: () -> ()): ()
+    function RemoveCursorEventListener(self, eventType: EnumCursorEventType, callback: (data: CursorEventData) -> ()): ()
     function RemoveCursorEventListeners(self, eventType: EnumCursorEventType): ()
     function RemoveAllCursorEventListeners(self): ()
-    function SimulateCursorClick(self): CursorEventData
+    function SimulateCursorClick(self): ()
 end
 
 declare extern type ClientUIFullscreenAnimationControl extends ClientUIBaseControl with
@@ -855,10 +855,10 @@ declare extern type ClientUIPresetButtonControl extends ClientUIBaseControl with
     clickAudioId: number
     raycastTarget: boolean
     function AddCursorEventListener(self, eventType: EnumCursorEventType, callback: (data: CursorEventData) -> ()): ()
-    function RemoveCursorEventListener(self, eventType: EnumCursorEventType, callback: () -> ()): ()
+    function RemoveCursorEventListener(self, eventType: EnumCursorEventType, callback: (data: CursorEventData) -> ()): ()
     function RemoveCursorEventListeners(self, eventType: EnumCursorEventType): ()
     function RemoveAllCursorEventListeners(self): ()
-    function SimulateCursorClick(self): CursorEventData
+    function SimulateCursorClick(self): ()
 end
 
 declare extern type ClientUIReferenceControl extends ClientUIBaseControl with
