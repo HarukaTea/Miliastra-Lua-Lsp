@@ -34,7 +34,8 @@ panel:SetVisible(true)
 ## 跨文件跳转和类型检查
 
 - 如果工作区里有 `ui/panel.lua`，用 `local panel = require("ui.panel")` 引入它，就能在调用处对它导出的字段按 **F12** 跳到定义。模块放在 `scripts/ui/panel.lua` 时，可在设置 `miliastraLsp.runtime.path` 的列表中追加 `scripts/?.lua`。
-- 在脚本首行写上 `--!strict` 可启用 Lua 脚本的严格类型检查。例如，把上面示例的 `true` 改成字符串 `"true"`，就能在「问题」面板看到参数类型错误。工作区的类型检查和 lint 规则可以放在根目录的 `.luaurc` 中。
+- 默认关闭类型检查，减少动态 UI 字段和引擎运行时接口的误报；保留语法错误提示、补全和中文悬停。需要类型检查时，在脚本首行写上 `--!strict`，或在项目 `.luaurc` 中设置 `"languageMode": "strict"`。例如，把上面示例的 `true` 改成字符串 `"true"`，开启检查后就能在「问题」面板看到参数类型错误。
+- 默认隐藏 `LocalShadow`、`LocalUnused`、`SameLineStatement`、`ImplicitReturn`、`ComparisonPrecedence`、`FunctionUnused`、`UninitializedLocal` 和 `MultiLineStatement` 警告，保留未使用导入提示。需要重新开启时，在项目 `.luaurc` 的 `lint` 中将对应规则设为 `true` 即可。
 - 千星奇域脚本中的 `&`、`|`、`<<`、`>>` 等位运算也支持静态检查。要调整补全、诊断或内联类型提示，在 VS Code 设置中搜索 `miliastraLsp`。
 
 ## 常见问题

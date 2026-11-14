@@ -1,0 +1,14 @@
+{
+    "languageMode": "nocheck",
+    "lint": {
+        "LocalShadow": false,
+        "LocalUnused": false,
+        "SameLineStatement": false,
+        "ImplicitReturn": false,
+        "ComparisonPrecedence": false,
+        "ImportUnused": true,
+        "FunctionUnused": false,
+        "UninitializedLocal": false,
+        "MultiLineStatement": false
+    }
+}

@@ -66,6 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
         },
     };
     const args = ['lsp', '--stdio',
+        '--base-luaurc=' + context.asAbsolutePath('server/default.luaurc'),
         '--definitions=@miliastra=' + context.asAbsolutePath('server/definitions/miliastra.d.luau'),
         '--documentation=' + context.asAbsolutePath('server/definitions/zh-cn.json'),
     ];

@@ -1,10 +1,11 @@
 diff --git a/Analysis/src/Linter.cpp b/Analysis/src/Linter.cpp
+index 60f569e..cf8d7cd 100644
 --- a/Analysis/src/Linter.cpp
 +++ b/Analysis/src/Linter.cpp
 @@ -987,6 +987,12 @@ private:
              g.function = true;
              g.location = expr->location;
-
+ 
 +            // Miliastra's runtime looks up these global lifecycle callbacks by name.
 +            const AstName name = expr->name;
 +            if (name == "OnInit" || name == "OnStart" || name == "OnEnable" || name == "OnDisable" ||
@@ -12,8 +13,62 @@ diff --git a/Analysis/src/Linter.cpp b/Analysis/src/Linter.cpp
 +                g.used = true;
 +
              node->func->visit(this);
-
+ 
              return false;
+@@ -1583,7 +1589,7 @@ private:
+         return nullptr;
+     }
+ 
+-    const char* checkStringMatchSet(const char* data, size_t size, const char* magic, const char* classes)
++    const char* checkStringMatchSet(const char* data, size_t size, const char* classes)
+     {
+         for (size_t i = 0; i < size; ++i)
+         {
+@@ -1604,12 +1610,7 @@ private:
+                     if (!strchr(classes, data[i] | ' '))
+                         return "invalid character class, must refer to a defined class or its inverse";
+                 }
+-                else
+-                {
+-                    // technically % can escape any non-alphanumeric character but this is error-prone
+-                    if (!strchr(magic, data[i]))
+-                        return "expected a magic character after %";
+-                }
++                // Lua permits escaping any non-alphanumeric character, including braces.
+ 
+                 if (i + 1 < size && data[i + 1] == '-')
+                     return "character range can't include character sets";
+@@ -1626,7 +1627,6 @@ private:
+ 
+     const char* checkStringMatch(const char* data, size_t size, int* outCaptures = nullptr)
+     {
+-        const char* magic = "^$()%.[]*+-?)";
+         const char* classes = "acdglpsuwxz";
+ 
+         std::vector<int> openCaptures;
+@@ -1678,12 +1678,7 @@ private:
+                             return "invalid character class, must refer to a defined class or its inverse";
+                     }
+                 }
+-                else
+-                {
+-                    // technically % can escape any non-alphanumeric character but this is error-prone
+-                    if (!strchr(magic, data[i]))
+-                        return "expected a magic character after %";
+-                }
++                // Lua permits escaping any non-alphanumeric character, including braces.
+             }
+             else if (data[i] == '[')
+             {
+@@ -1709,7 +1704,7 @@ private:
+                 if (j == size)
+                     return "expected ] at the end of the string to close a set";
+ 
+-                if (const char* error = checkStringMatchSet(data + i + 1, j - i - 1, magic, classes))
++                if (const char* error = checkStringMatchSet(data + i + 1, j - i - 1, classes))
+                     return error;
+ 
+                 LUAU_ASSERT(data[j] == ']');
 diff --git a/Analysis/src/TableLiteralInference.cpp b/Analysis/src/TableLiteralInference.cpp
 index 2ff50e2..757d592 100644
 --- a/Analysis/src/TableLiteralInference.cpp

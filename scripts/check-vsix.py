@@ -34,6 +34,7 @@ def check(package, root):
         executable = Path(archive.extract(binaries[0], root))
         definitions = archive.extract("extension/server/definitions/miliastra.d.luau", root)
         docs = archive.extract("extension/server/definitions/zh-cn.json", root)
+        defaults = archive.extract("extension/server/default.luaurc", root)
         manifest = json.loads(archive.read("extension/package.json"))
         assert "extension/" + manifest["main"].removeprefix("./") + ".js" in archive.namelist()
         assert "extension/node_modules/vscode-languageclient/package.json" in archive.namelist()
@@ -87,11 +88,13 @@ print("中文", actions.run)
 local function identity<T>(value: T): T return value end
 local typed = identity<<typeof({enabled = 1 < 2})>>({enabled = true})
 assert(typed.enabled)
+printerr("check", mask)
 return control
 """
     script.write_text(source, encoding="utf-8")
     proc = subprocess.Popen([executable, "lsp", "--stdio", "--definitions=@miliastra=" + definitions,
-                             "--documentation=" + docs], cwd=workspace, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                             "--documentation=" + docs, "--base-luaurc=" + defaults],
+                            cwd=workspace, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     messages = queue.Queue()
     threading.Thread(target=read_messages, args=(proc.stdout, messages), daemon=True).start()
 
@@ -206,15 +209,51 @@ return control
                                 .replace("function OnStart()", "function OnCustom()")
                                 .replace("control:SetVisible(dt > 0)", 'control:SetVisible("bad")')
                                 .replace("AddIntList({1, 2})", "AddIntList(1)")
-                                .replace("area:SimulateCursorClick()", "local event = area:SimulateCursorClick(); print(event.dragging)")}]})
+                                .replace("area:SimulateCursorClick()", "local event = area:SimulateCursorClick(); print(event.dragging)")
+                                .replace("return control", 'local unusedValue = 1\nlocal unusedImport = require("ui.panel")\nreturn control')}]})
         errors = request(6, "textDocument/diagnostic", dict(textDocument=doc))["items"]
         assert any(e["range"]["start"]["line"] == 4 and "number" in e["message"] for e in errors), errors
-        unused = [e["message"] for e in errors if e["code"] == 8]
-        assert len(unused) == 2 and any("'OnInit'" in m for m in unused) and any("'OnCustom'" in m for m in unused), errors
+        assert not any(e["code"] == 8 for e in errors), errors
+        assert not any(e["code"] == 7 for e in errors) and any(e["code"] == 9 for e in errors), errors
         assert any(e["range"]["start"]["line"] == 12 and "boolean" in e["message"] for e in errors), errors
         assert any("{number}" in e["message"] for e in errors), errors
         click_line = source.splitlines().index("area:SimulateCursorClick()")
         assert any(e["range"]["start"]["line"] == click_line and e["severity"] == 1 for e in errors), errors
+        ordinary = {"uri": (workspace / "ordinary.lua").as_uri()}
+        ordinary_source = """local state = {ui = {}}
+local function refresh() state.ui.title.text = "ready" end
+state.ui.title = game.GetClientUIControl(1)
+refresh()
+printerr(math.maxinteger)
+local unusedValue = 1
+local unusedImport = require("ui.panel")
+local control = game.GetClientUIControl(1)
+control:SetVisible(true)
+assert(string.match("{1:ps.A}", "^%{1:[%a]+%."))
+assert(string.match("{", "[%{%}]"))
+"""
+        send("textDocument/didOpen", {"textDocument": dict(ordinary, languageId="lua", version=1, text=ordinary_source)})
+        default_errors = request(33, "textDocument/diagnostic", dict(textDocument=ordinary))["items"]
+        assert {e["code"] for e in default_errors} == {9}, default_errors
+        items = request(34, "textDocument/completion", dict(textDocument=ordinary, position={"line": 8, "character": 8}))
+        assert any(i["label"] == "SetVisible" for i in items), items
+        hover = request(35, "textDocument/hover", dict(textDocument=ordinary, position={"line": 8, "character": 11}))
+        assert "仅设置可见性" in hover["contents"]["value"], hover
+        send("textDocument/didChange", {"textDocument": dict(ordinary, version=2),
+             "contentChanges": [{"text": ordinary_source + 'print(string.match("x", "%"))\nlocal broken = )\n'}]})
+        syntax_errors = request(36, "textDocument/diagnostic", dict(textDocument=ordinary))["items"]
+        assert any(e["message"].startswith("SyntaxError:") for e in syntax_errors), syntax_errors
+        assert any(e["code"] == 18 for e in syntax_errors), syntax_errors
+        config = workspace / ".luaurc"
+        config.write_text('{"languageMode": "strict", "lint": {"FunctionUnused": true}}', encoding="utf-8")
+        send("workspace/didChangeWatchedFiles", {"changes": [{"uri": config.as_uri(), "type": 1}]})
+        override = {"uri": (workspace / "override.lua").as_uri()}
+        send("textDocument/didOpen", {"textDocument": dict(override, languageId="lua", version=1,
+             text='local function OnInit() end\nfunction OnCustom() end\nfunction OnStart() end\ngame.GetClientUIControl("bad")')})
+        overridden = request(32, "textDocument/diagnostic", dict(textDocument=override))["items"]
+        unused = [e["message"] for e in overridden if e["code"] == 8]
+        assert len(unused) == 2 and any("'OnInit'" in m for m in unused) and any("'OnCustom'" in m for m in unused), overridden
+        assert any(e["range"]["start"]["line"] == 3 and "number" in e["message"] for e in overridden), overridden
         outside = {"uri": (root / "game-other" / "main.lua").as_uri()}
         send("textDocument/didOpen", {"textDocument": dict(outside, languageId="lua", version=1,
              text='--!strict\nlocal value: number = "bad"\nreturn value')})

@@ -904,3 +904,4 @@ declare Color: ColorConstructor
 declare Enum: Enums
 declare game: Game
 declare script: Script
+declare printerr: (...any) -> ()

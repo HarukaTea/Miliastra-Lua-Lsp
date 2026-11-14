@@ -8,6 +8,9 @@
   "@miliastra/global/game": {
     "documentation": "客户端运行时提供的全局表。以下函数均使用点号调用。"
   },
+  "@miliastra/global/printerr": {
+    "documentation": "将传入值写入错误级别日志；不抛出 Lua 错误，也不阻断运行。"
+  },
   "@miliastra/global/script": {
     "documentation": "当前脚本实例。"
   },
