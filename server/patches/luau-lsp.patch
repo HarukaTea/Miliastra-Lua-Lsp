@@ -77,10 +77,16 @@ index 4d8833e..823b60d 100644
          workspace->setupWithConfiguration(config);
  
 diff --git a/src/LuauExt.cpp b/src/LuauExt.cpp
-index 953ef01..109766a 100644
+index 953ef01..2be43c8 100644
 --- a/src/LuauExt.cpp
 +++ b/src/LuauExt.cpp
-@@ -56,7 +56,24 @@ std::optional<nlohmann::json> parseDefinitionsFileMetadata(const std::string& de
+@@ -1,3 +1,5 @@
++#include <algorithm>
++#include <initializer_list>
+ #include <optional>
+ #include <utility>
+
+@@ -56,7 +58,49 @@ std::optional<nlohmann::json> parseDefinitionsFileMetadata(const std::string& de
  Luau::LoadDefinitionFileResult registerDefinitions(
      Luau::Frontend& frontend, Luau::GlobalTypes& globals, const std::string& packageName, const std::string& definitions)
  {
@@ -88,6 +94,31 @@ index 953ef01..109766a 100644
 +    auto result = frontend.loadDefinitionFile(globals, globals.globalScope, definitions, packageName, /* captureComments = */ true);
 +    if (result.success && packageName == "@miliastra")
 +    {
++        // Miliastra uses a restricted Lua 5.3 runtime, not Luau's runtime libraries.
++        for (const char* name : {"io", "coroutine", "buffer", "vector", "gcinfo", "getfenv", "setfenv", "newproxy", "loadstring", "unpack"})
++            globals.globalScope->bindings.erase(globals.globalNames.names->getOrAdd(name));
++
++        auto restrictLibrary = [&](const char* name, std::initializer_list<const char*> members)
++        {
++            auto binding = Luau::tryGetGlobalBinding(globals, name);
++            if (!binding)
++                return;
++            if (auto table = Luau::getMutable<Luau::TableType>(Luau::follow(binding->typeId)))
++            {
++                for (auto it = table->props.begin(); it != table->props.end();)
++                {
++                    if (std::find(members.begin(), members.end(), it->first) == members.end())
++                        it = table->props.erase(it);
++                    else
++                        ++it;
++                }
++            }
++        };
++        restrictLibrary("debug", {"traceback"});
++        restrictLibrary("os", {"time", "date", "clock", "difftime"});
++        restrictLibrary("table", {"concat", "insert", "move", "pack", "remove", "sort", "unpack"});
++        restrictLibrary("string", {"byte", "char", "find", "format", "gmatch", "gsub", "len", "lower", "match", "pack", "packsize", "rep", "reverse", "sub", "unpack", "upper"});
++
 +        // Make Enum.EaseType usable as an annotation as well as a value namespace.
 +        const auto& types = globals.globalScope->exportedTypeBindings;
 +        auto base = types.find("EnumItem");

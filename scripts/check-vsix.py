@@ -89,6 +89,22 @@ local function identity<T>(value: T): T return value end
 local typed = identity<<typeof({enabled = 1 < 2})>>({enabled = true})
 assert(typed.enabled)
 printerr("check", mask)
+local grid = control :: ClientUIGridScrollerControl
+grid.itemPrefabIndex = 1
+local reference = control :: ClientUIReferenceControl
+print(control.prefabIndex, script.scriptMappingId, reference.referencedPrefabIndex)
+control:GetScript(script.scriptMappingId)
+local function onKey() return true end
+control:AddKeyEventListener(Enum.KeyEventType.KeyboardJumpKeyDown, onKey)
+control:RemoveKeyEventListener(Enum.KeyEventType.KeyboardJumpKeyDown, onKey)
+signal:AddVector3({x = 1, y = 2, z = 3})
+local tween = game.Tween(control, {anchoredPositionX = 10}, 1)
+tween:Pause()
+game.TweenSequence():Pause()
+print(math.maxinteger, math.mininteger, math.type(1), math.tointeger("1"), math.ult(1, 2))
+print(math.isnan(0), math.isinf(1), math.atan(1, 2))
+print(debug.traceback())
+print(Enum.KeyboardKeyCode.CraftspersonKey1)
 return control
 """
     script.write_text(source, encoding="utf-8")
@@ -189,11 +205,23 @@ return control
                    for loc in result), result
         hover = request(5, "textDocument/hover", cursor(5, "SetVisible", 3))
         assert "仅设置可见性" in hover["contents"]["value"], hover
+        key_line = source.splitlines().index("print(Enum.KeyboardKeyCode.CraftspersonKey1)")
+        hover = request(40, "textDocument/hover", cursor(key_line, "CraftspersonKey1", 3))
+        assert "默认物理键：1" in hover["contents"]["value"], hover
+        math_line = next(i for i, line in enumerate(source.splitlines()) if "math.maxinteger" in line)
+        items = request(41, "textDocument/completion", cursor(math_line, "math.", len("math.")))
+        names = {item["label"] for item in items}
+        assert {"maxinteger", "mininteger", "type", "tointeger", "ult", "isnan", "isinf"} <= names, names
+        assert "clamp" not in names, names
+        debug_line = source.splitlines().index("print(debug.traceback())")
+        items = request(42, "textDocument/completion", cursor(debug_line, "debug.", len("debug.")))
+        assert {item["label"] for item in items} == {"traceback"}, items
         signature = request(21, "textDocument/signatureHelp", cursor(5, "mask", 2))
         assert signature and "SetVisible" in signature["signatures"][0]["label"], signature
         hints = request(22, "textDocument/inlayHint", dict(textDocument=doc,
                         range={"start": {"line": 5, "character": 0}, "end": {"line": 6, "character": 0}}))
-        assert hints and not any("disp:" in json.dumps(h) or '"x:"' in json.dumps(h) for h in hints), hints
+        assert hints and not any("disp:" in json.dumps(h) or '"x:"' in json.dumps(h)
+                                 for h in hints if h["position"]["line"] in (2, 3, 5, 12)), hints
         tokens = request(23, "textDocument/semanticTokens/full", dict(textDocument=doc))["data"]
         line = column = 0
         previous_end = (0, 0)
@@ -210,6 +238,13 @@ return control
                                 .replace("control:SetVisible(dt > 0)", 'control:SetVisible("bad")')
                                 .replace("AddIntList({1, 2})", "AddIntList(1)")
                                 .replace("area:SimulateCursorClick()", "local event = area:SimulateCursorClick(); print(event.dragging)")
+                                .replace("grid.itemPrefabIndex = 1", "grid.itemPrefabId = 1")
+                                .replace("local function onKey() return true end", "local function onKey() return 'bad' end")
+                                .replace("signal:AddVector3({x = 1, y = 2, z = 3})", "signal:AddVector3({x = 'bad', y = false})")
+                                .replace("tween:Pause()", "tween:Pause():Resume()")
+                                .replace("game.TweenSequence():Pause()", "game.TweenSequence():Pause():Resume()")
+                                .replace("print(debug.traceback())", "coroutine.create(function() end); print(debug.info(1, 'n'))")
+                                .replace("print(Enum.KeyboardKeyCode.CraftspersonKey1)", 'control.active = true; control["visible"] = false; control.id += 1')
                                 .replace("return control", 'local unusedValue = 1\nlocal unusedImport = require("ui.panel")\nreturn control')}]})
         errors = request(6, "textDocument/diagnostic", dict(textDocument=doc))["items"]
         assert any(e["range"]["start"]["line"] == 4 and "number" in e["message"] for e in errors), errors
@@ -219,6 +254,15 @@ return control
         assert any("{number}" in e["message"] for e in errors), errors
         click_line = source.splitlines().index("area:SimulateCursorClick()")
         assert any(e["range"]["start"]["line"] == click_line and e["severity"] == 1 for e in errors), errors
+        error_lines = {e["range"]["start"]["line"] for e in errors if e["severity"] == 1}
+        for original in ("grid.itemPrefabIndex = 1",
+                         "control:AddKeyEventListener(Enum.KeyEventType.KeyboardJumpKeyDown, onKey)",
+                         "signal:AddVector3({x = 1, y = 2, z = 3})", "tween:Pause()",
+                         "game.TweenSequence():Pause()", "print(debug.traceback())",
+                         "print(Enum.KeyboardKeyCode.CraftspersonKey1)"):
+            assert source.splitlines().index(original) in error_lines, (original, errors)
+        readonly = [e for e in errors if e["range"]["start"]["line"] == key_line]
+        assert len(readonly) == 3 and all("read-only" in e["message"] for e in readonly), readonly
         ordinary = {"uri": (workspace / "ordinary.lua").as_uri()}
         ordinary_source = """local state = {ui = {}}
 local function refresh() state.ui.title.text = "ready" end

@@ -78,6 +78,46 @@ index 2ff50e2..757d592 100644
  // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
  
  #include "Luau/TableLiteralInference.h"
+diff --git a/Analysis/src/TypeInfer.cpp b/Analysis/src/TypeInfer.cpp
+index 152a268..061aa45 100644
+--- a/Analysis/src/TypeInfer.cpp
++++ b/Analysis/src/TypeInfer.cpp
+@@ -1056,7 +1056,7 @@ ControlFlow TypeChecker::check(const ScopePtr& scope, const AstStatCompoundAssig
+
+     TypeId result = checkBinaryOperation(scope, expr, left, right);
+
+-    unify(result, left, scope, assign.location);
++    unify(result, checkLValue(scope, *assign.var, ValueContext::LValue), scope, assign.location);
+
+     return ControlFlow::None;
+ }
+@@ -1819,6 +1819,8 @@ ControlFlow TypeChecker::check(const ScopePtr& scope, const AstStatDeclareExtern
+         if (assignTo.count(propName) == 0)
+         {
+             assignTo[propName] = {propTy, /*deprecated*/ false, /*deprecatedSuggestion*/ "", prop.location};
++            if (prop.access == AstTableAccess::Read)
++                assignTo[propName].writeTy.reset();
+         }
+         else
+         {
+@@ -3592,6 +3594,8 @@ TypeId TypeChecker::checkLValueBinding(const ScopePtr& scope, const AstExprIndex
+     {
+         if (const Property* prop = lookupExternTypeProp(lhsExternType, name))
+         {
++            if (ctx == ValueContext::LValue && !prop->writeTy)
++                reportError(expr.location, PropertyAccessViolation{lhs, name, PropertyAccessViolation::CannotWrite});
+             return prop->type_DEPRECATED();
+         }
+
+@@ -3651,6 +3655,8 @@ TypeId TypeChecker::checkLValueBinding(const ScopePtr& scope, const AstExprIndex
+         {
+             if (const Property* prop = lookupExternTypeProp(exprExternType, value->value.data))
+             {
++                if (ctx == ValueContext::LValue && !prop->writeTy)
++                    reportError(expr.location, PropertyAccessViolation{exprType, value->value.data, PropertyAccessViolation::CannotWrite});
+                 return prop->type_DEPRECATED();
+             }
+
 diff --git a/Ast/include/Luau/Parser.h b/Ast/include/Luau/Parser.h
 index 15ff0ee..611ee4c 100644
 --- a/Ast/include/Luau/Parser.h

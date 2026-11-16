@@ -8,6 +8,27 @@
   "@miliastra/global/game": {
     "documentation": "客户端运行时提供的全局表。以下函数均使用点号调用。"
   },
+  "@miliastra/global/math.isinf": {
+    "documentation": "判断数值是否为正负无穷。"
+  },
+  "@miliastra/global/math.isnan": {
+    "documentation": "判断数值是否为 NaN。"
+  },
+  "@miliastra/global/math.maxinteger": {
+    "documentation": "Lua 整数类型的最大值。"
+  },
+  "@miliastra/global/math.mininteger": {
+    "documentation": "Lua 整数类型的最小值。"
+  },
+  "@miliastra/global/math.tointeger": {
+    "documentation": "可转换为整数时返回该整数，否则返回 nil。"
+  },
+  "@miliastra/global/math.type": {
+    "documentation": "数值返回 integer 或 float；非数值返回 nil。"
+  },
+  "@miliastra/global/math.ult": {
+    "documentation": "将两个整数按无符号整数比较，返回 m 是否小于 n。"
+  },
   "@miliastra/global/printerr": {
     "documentation": "将传入值写入错误级别日志；不抛出 Lua 错误，也不阻断运行。"
   },
@@ -30,7 +51,7 @@
     "documentation": "是否播放动效音效。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.AddKeyEventListener": {
-    "documentation": "注册指定按键事件监听。"
+    "documentation": "注册指定按键事件监听。回调须返回 boolean：true 标记事件已处理，同一容器内其他按键不再响应本次事件；false 表示未处理。移除监听时须使用同一回调引用。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.AddNavigationEventListener": {
     "documentation": "注册手柄导航事件监听。"
@@ -66,7 +87,7 @@
     "documentation": "获取轴心。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.GetScript": {
-    "documentation": "按脚本元件 ID 获取脚本。"
+    "documentation": "按脚本映射 ID 获取挂载的脚本。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.GetScriptByPath": {
     "documentation": "按路径获取挂载的脚本。"
@@ -87,7 +108,7 @@
     "documentation": "移除全部手柄导航事件监听。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.RemoveKeyEventListener": {
-    "documentation": "移除单个按键事件监听。"
+    "documentation": "移除指定按键事件和回调的监听；须传入注册时的同一回调引用，回调返回 boolean。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.RemoveKeyEventListeners": {
     "documentation": "移除指定事件的全部监听。"
@@ -200,8 +221,8 @@
   "@miliastra/globaltype/ClientUIBaseControl.pivotY": {
     "documentation": "轴心 Y（可 Tween）。"
   },
-  "@miliastra/globaltype/ClientUIBaseControl.prefabId": {
-    "documentation": "控件元件 ID。"
+  "@miliastra/globaltype/ClientUIBaseControl.prefabIndex": {
+    "documentation": "控件模板索引（只读），不同于运行时 id。"
   },
   "@miliastra/globaltype/ClientUIBaseControl.sizeDeltaX": {
     "documentation": "宽度（可 Tween）。"
@@ -275,8 +296,8 @@
   "@miliastra/globaltype/ClientUIGridScrollerControl.itemCount": {
     "documentation": "条目数量。"
   },
-  "@miliastra/globaltype/ClientUIGridScrollerControl.itemPrefabId": {
-    "documentation": "条目元件 ID。"
+  "@miliastra/globaltype/ClientUIGridScrollerControl.itemPrefabIndex": {
+    "documentation": "列表项控件模板索引。"
   },
   "@miliastra/globaltype/ClientUIGridScrollerControl.layoutConstraint": {
     "documentation": "布局约束。"
@@ -404,8 +425,8 @@
   "@miliastra/globaltype/ClientUIPresetButtonControl.raycastTarget": {
     "documentation": "可被光标射线检测。"
   },
-  "@miliastra/globaltype/ClientUIReferenceControl.referencedPrefabId": {
-    "documentation": "引用的界面元件 ID。"
+  "@miliastra/globaltype/ClientUIReferenceControl.referencedPrefabIndex": {
+    "documentation": "引用的控件模板索引（只读）。"
   },
   "@miliastra/globaltype/ClientUITextBoxControl.adaptiveFontSize": {
     "documentation": "字号自适应。"
@@ -497,6 +518,366 @@
   "@miliastra/globaltype/CursorEventData.touchId": {
     "documentation": "触摸 ID。"
   },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CharacterSkill1Key": {
+    "documentation": "角色技能1。默认物理键：RT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CharacterSkill2Key": {
+    "documentation": "角色技能2。默认物理键：Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CharacterSkill3Key": {
+    "documentation": "角色技能3。默认物理键：十字键上；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CharacterSkill4Key": {
+    "documentation": "角色技能4。默认物理键：十字键右；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey1": {
+    "documentation": "奇匠按键1。默认物理键：十字键左；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey10": {
+    "documentation": "奇匠按键10。默认物理键：LB + 十字键下；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey11": {
+    "documentation": "奇匠按键11。默认物理键：LB + RB；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey12": {
+    "documentation": "奇匠按键12。默认物理键：LB + LT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey13": {
+    "documentation": "奇匠按键13。默认物理键：LB + RT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey14": {
+    "documentation": "奇匠按键14。默认物理键：LB + LS(按下)；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey2": {
+    "documentation": "奇匠按键2。默认物理键：十字键下；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey3": {
+    "documentation": "奇匠按键3。默认物理键：LT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey4": {
+    "documentation": "奇匠按键4。默认物理键：LB + Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey5": {
+    "documentation": "奇匠按键5。默认物理键：LB + X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey6": {
+    "documentation": "奇匠按键6。默认物理键：LB + A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey7": {
+    "documentation": "奇匠按键7。默认物理键：LB + 十字键上；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey8": {
+    "documentation": "奇匠按键8。默认物理键：LB + 十字键右；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.CraftspersonKey9": {
+    "documentation": "奇匠按键9。默认物理键：LB + 十字键左；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.InteractKey": {
+    "documentation": "拾取/交互。默认物理键：X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.JumpKey": {
+    "documentation": "跳跃。默认物理键：A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.MenuBackKey": {
+    "documentation": "菜单返回。默认物理键：—（由手柄导航配置决定）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.MenuConfirmKey": {
+    "documentation": "菜单确认。默认物理键：—（由手柄导航配置决定）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.None": {
+    "documentation": "无。默认物理键：无；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.NormalAttackKey": {
+    "documentation": "普通攻击。默认物理键：B；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerKeyCodeItems.SprintKey": {
+    "documentation": "冲刺。默认物理键：RB；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationDirItems.Down": {
+    "documentation": "向下。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationDirItems.Left": {
+    "documentation": "向左。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationDirItems.Right": {
+    "documentation": "向右。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationDirItems.Up": {
+    "documentation": "向上。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.Cancel": {
+    "documentation": "取消。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.Confirm": {
+    "documentation": "确认。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.Focus": {
+    "documentation": "进入聚焦。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.LeftStickDown": {
+    "documentation": "左摇杆向下。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.LeftStickLeft": {
+    "documentation": "左摇杆向左。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.LeftStickRight": {
+    "documentation": "左摇杆向右。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.LeftStickUp": {
+    "documentation": "左摇杆向上。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.LostFocus": {
+    "documentation": "退出聚焦。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.RightStickDown": {
+    "documentation": "右摇杆向下。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.RightStickLeft": {
+    "documentation": "右摇杆向左。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.RightStickRight": {
+    "documentation": "右摇杆向右。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationEventTypeItems.RightStickUp": {
+    "documentation": "右摇杆向上。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationModeItems.NearestControl": {
+    "documentation": "导航至最近控件。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationModeItems.None": {
+    "documentation": "无导航。"
+  },
+  "@miliastra/globaltype/EnumControllerNavigationModeItems.Specified": {
+    "documentation": "导航至指定控件。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorBeginDrag": {
+    "documentation": "开始拖拽。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorClick": {
+    "documentation": "完成点击。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorDown": {
+    "documentation": "光标按下。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorDrag": {
+    "documentation": "光标拖拽。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorEndDrag": {
+    "documentation": "结束拖拽。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorEnter": {
+    "documentation": "光标进入检测区域。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorExit": {
+    "documentation": "光标离开检测区域。"
+  },
+  "@miliastra/globaltype/EnumCursorEventTypeItems.CursorUp": {
+    "documentation": "光标抬起。"
+  },
+  "@miliastra/globaltype/EnumCustomVariableEntityTypeItems.AvatarSelf": {
+    "documentation": "角色自身。"
+  },
+  "@miliastra/globaltype/EnumCustomVariableEntityTypeItems.Level": {
+    "documentation": "关卡。"
+  },
+  "@miliastra/globaltype/EnumCustomVariableEntityTypeItems.PlayerSelf": {
+    "documentation": "玩家自身。"
+  },
+  "@miliastra/globaltype/EnumDeviceItems.Controller": {
+    "documentation": "主机手柄。"
+  },
+  "@miliastra/globaltype/EnumDeviceItems.KeyboardAndMouse": {
+    "documentation": "键鼠。"
+  },
+  "@miliastra/globaltype/EnumDeviceItems.Mobile": {
+    "documentation": "移动端触屏。"
+  },
+  "@miliastra/globaltype/EnumDeviceItems.MobileController": {
+    "documentation": "移动端手柄。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InBack": {
+    "documentation": "回弹缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InBounce": {
+    "documentation": "弹跳缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InCirc": {
+    "documentation": "圆形缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InCubic": {
+    "documentation": "三次缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InElastic": {
+    "documentation": "弹性缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InExpo": {
+    "documentation": "指数缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutBack": {
+    "documentation": "回弹缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutBounce": {
+    "documentation": "弹跳缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutCirc": {
+    "documentation": "圆形缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutCubic": {
+    "documentation": "三次缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutElastic": {
+    "documentation": "弹性缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutExpo": {
+    "documentation": "指数缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutQuad": {
+    "documentation": "二次缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutQuart": {
+    "documentation": "四次缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutQuint": {
+    "documentation": "五次缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InOutSine": {
+    "documentation": "正弦缓入缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InQuad": {
+    "documentation": "二次缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InQuart": {
+    "documentation": "四次缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InQuint": {
+    "documentation": "五次缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.InSine": {
+    "documentation": "正弦缓入。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.Linear": {
+    "documentation": "线性。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutBack": {
+    "documentation": "回弹缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutBounce": {
+    "documentation": "弹跳缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutCirc": {
+    "documentation": "圆形缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutCubic": {
+    "documentation": "三次缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutElastic": {
+    "documentation": "弹性缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutExpo": {
+    "documentation": "指数缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutQuad": {
+    "documentation": "二次缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutQuart": {
+    "documentation": "四次缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutQuint": {
+    "documentation": "五次缓出。"
+  },
+  "@miliastra/globaltype/EnumEaseTypeItems.OutSine": {
+    "documentation": "正弦缓出。"
+  },
+  "@miliastra/globaltype/EnumImageFillHorizontalTypeItems.Left": {
+    "documentation": "从左侧开始。"
+  },
+  "@miliastra/globaltype/EnumImageFillHorizontalTypeItems.Right": {
+    "documentation": "从右侧开始。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadial90TypeItems.BottomLeft": {
+    "documentation": "左下。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadial90TypeItems.BottomRight": {
+    "documentation": "右下。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadial90TypeItems.TopLeft": {
+    "documentation": "左上。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadial90TypeItems.TopRight": {
+    "documentation": "右上。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadialTypeItems.Bottom": {
+    "documentation": "底部。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadialTypeItems.Left": {
+    "documentation": "左侧。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadialTypeItems.Right": {
+    "documentation": "右侧。"
+  },
+  "@miliastra/globaltype/EnumImageFillRadialTypeItems.Top": {
+    "documentation": "顶部。"
+  },
+  "@miliastra/globaltype/EnumImageFillTypeItems.Horizontal": {
+    "documentation": "水平。"
+  },
+  "@miliastra/globaltype/EnumImageFillTypeItems.Radial180": {
+    "documentation": "180度环绕。"
+  },
+  "@miliastra/globaltype/EnumImageFillTypeItems.Radial360": {
+    "documentation": "360度环绕。"
+  },
+  "@miliastra/globaltype/EnumImageFillTypeItems.Radial90": {
+    "documentation": "90度环绕。"
+  },
+  "@miliastra/globaltype/EnumImageFillTypeItems.Unused": {
+    "documentation": "不使用填充。"
+  },
+  "@miliastra/globaltype/EnumImageFillTypeItems.Vertical": {
+    "documentation": "垂直。"
+  },
+  "@miliastra/globaltype/EnumImageFillVerticalTypeItems.Bottom": {
+    "documentation": "从底部开始。"
+  },
+  "@miliastra/globaltype/EnumImageFillVerticalTypeItems.Top": {
+    "documentation": "从顶部开始。"
+  },
+  "@miliastra/globaltype/EnumImageMaskSoftEdgeModeItems.Percentage": {
+    "documentation": "按比例设置边缘羽化。"
+  },
+  "@miliastra/globaltype/EnumImageMaskSoftEdgeModeItems.Pixel": {
+    "documentation": "按像素设置边缘羽化。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.Currency": {
+    "documentation": "货币。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.Equipment": {
+    "documentation": "装备。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.Faction": {
+    "documentation": "阵营。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.Item": {
+    "documentation": "道具。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.Prefab": {
+    "documentation": "元件。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.Skill": {
+    "documentation": "技能。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.StaticReference": {
+    "documentation": "静态引用。"
+  },
+  "@miliastra/globaltype/EnumImageSourceItems.UnitStatus": {
+    "documentation": "单位状态。"
+  },
+  "@miliastra/globaltype/EnumImageTypeItems.Basic": {
+    "documentation": "基础。"
+  },
+  "@miliastra/globaltype/EnumImageTypeItems.Stretch": {
+    "documentation": "拉伸。"
+  },
   "@miliastra/globaltype/EnumItem.EnumType": {
     "documentation": "枚举类型名称。"
   },
@@ -505,6 +886,828 @@
   },
   "@miliastra/globaltype/EnumItem.Name": {
     "documentation": "枚举值名称。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill1KeyDown": {
+    "documentation": "手柄：角色技能1（按下）。默认物理键：RT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill1KeyUp": {
+    "documentation": "手柄：角色技能1（抬起）。默认物理键：RT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill2KeyDown": {
+    "documentation": "手柄：角色技能2（按下）。默认物理键：Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill2KeyUp": {
+    "documentation": "手柄：角色技能2（抬起）。默认物理键：Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill3KeyDown": {
+    "documentation": "手柄：角色技能3（按下）。默认物理键：十字键上；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill3KeyUp": {
+    "documentation": "手柄：角色技能3（抬起）。默认物理键：十字键上；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill4KeyDown": {
+    "documentation": "手柄：角色技能4（按下）。默认物理键：十字键右；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCharacterSkill4KeyUp": {
+    "documentation": "手柄：角色技能4（抬起）。默认物理键：十字键右；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey10Down": {
+    "documentation": "手柄：奇匠按键10（按下）。默认物理键：LB + 十字键下；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey10Up": {
+    "documentation": "手柄：奇匠按键10（抬起）。默认物理键：LB + 十字键下；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey11Down": {
+    "documentation": "手柄：奇匠按键11（按下）。默认物理键：LB + RB；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey11Up": {
+    "documentation": "手柄：奇匠按键11（抬起）。默认物理键：LB + RB；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey12Down": {
+    "documentation": "手柄：奇匠按键12（按下）。默认物理键：LB + LT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey12Up": {
+    "documentation": "手柄：奇匠按键12（抬起）。默认物理键：LB + LT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey13Down": {
+    "documentation": "手柄：奇匠按键13（按下）。默认物理键：LB + RT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey13Up": {
+    "documentation": "手柄：奇匠按键13（抬起）。默认物理键：LB + RT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey14Down": {
+    "documentation": "手柄：奇匠按键14（按下）。默认物理键：LB + LS(按下)；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey14Up": {
+    "documentation": "手柄：奇匠按键14（抬起）。默认物理键：LB + LS(按下)；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey1Down": {
+    "documentation": "手柄：奇匠按键1（按下）。默认物理键：十字键左；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey1Up": {
+    "documentation": "手柄：奇匠按键1（抬起）。默认物理键：十字键左；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey2Down": {
+    "documentation": "手柄：奇匠按键2（按下）。默认物理键：十字键下；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey2Up": {
+    "documentation": "手柄：奇匠按键2（抬起）。默认物理键：十字键下；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey3Down": {
+    "documentation": "手柄：奇匠按键3（按下）。默认物理键：LT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey3Up": {
+    "documentation": "手柄：奇匠按键3（抬起）。默认物理键：LT；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey4Down": {
+    "documentation": "手柄：奇匠按键4（按下）。默认物理键：LB + Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey4Up": {
+    "documentation": "手柄：奇匠按键4（抬起）。默认物理键：LB + Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey5Down": {
+    "documentation": "手柄：奇匠按键5（按下）。默认物理键：LB + X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey5Up": {
+    "documentation": "手柄：奇匠按键5（抬起）。默认物理键：LB + X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey6Down": {
+    "documentation": "手柄：奇匠按键6（按下）。默认物理键：LB + A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey6Up": {
+    "documentation": "手柄：奇匠按键6（抬起）。默认物理键：LB + A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey7Down": {
+    "documentation": "手柄：奇匠按键7（按下）。默认物理键：LB + 十字键上；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey7Up": {
+    "documentation": "手柄：奇匠按键7（抬起）。默认物理键：LB + 十字键上；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey8Down": {
+    "documentation": "手柄：奇匠按键8（按下）。默认物理键：LB + 十字键右；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey8Up": {
+    "documentation": "手柄：奇匠按键8（抬起）。默认物理键：LB + 十字键右；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey9Down": {
+    "documentation": "手柄：奇匠按键9（按下）。默认物理键：LB + 十字键左；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerCraftspersonKey9Up": {
+    "documentation": "手柄：奇匠按键9（抬起）。默认物理键：LB + 十字键左；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerInteractKeyDown": {
+    "documentation": "手柄：拾取/交互（按下）。默认物理键：X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerInteractKeyUp": {
+    "documentation": "手柄：拾取/交互（抬起）。默认物理键：X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerJumpKeyDown": {
+    "documentation": "手柄：跳跃（按下）。默认物理键：A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerJumpKeyUp": {
+    "documentation": "手柄：跳跃（抬起）。默认物理键：A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerMenuBackKeyDown": {
+    "documentation": "手柄：菜单返回（按下）。默认物理键：—（由手柄导航配置决定）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerMenuBackKeyUp": {
+    "documentation": "手柄：菜单返回（抬起）。默认物理键：—（由手柄导航配置决定）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerMenuConfirmKeyDown": {
+    "documentation": "手柄：菜单确认（按下）。默认物理键：—（由手柄导航配置决定）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerMenuConfirmKeyUp": {
+    "documentation": "手柄：菜单确认（抬起）。默认物理键：—（由手柄导航配置决定）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerNormalAttackKeyDown": {
+    "documentation": "手柄：普通攻击（按下）。默认物理键：B；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerNormalAttackKeyUp": {
+    "documentation": "手柄：普通攻击（抬起）。默认物理键：B；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerSprintKeyDown": {
+    "documentation": "手柄：冲刺（按下）。默认物理键：RB；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.ControllerSprintKeyUp": {
+    "documentation": "手柄：冲刺（抬起）。默认物理键：RB；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill1KeyDown": {
+    "documentation": "键鼠：角色技能1（按下）。默认物理键：E；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill1KeyUp": {
+    "documentation": "键鼠：角色技能1（抬起）。默认物理键：E；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill2KeyDown": {
+    "documentation": "键鼠：角色技能2（按下）。默认物理键：Q；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill2KeyUp": {
+    "documentation": "键鼠：角色技能2（抬起）。默认物理键：Q；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill3KeyDown": {
+    "documentation": "键鼠：角色技能3（按下）。默认物理键：R；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill3KeyUp": {
+    "documentation": "键鼠：角色技能3（抬起）。默认物理键：R；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill4KeyDown": {
+    "documentation": "键鼠：角色技能4（按下）。默认物理键：T；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCharacterSkill4KeyUp": {
+    "documentation": "键鼠：角色技能4（抬起）。默认物理键：T；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey10Down": {
+    "documentation": "键鼠：奇匠按键10（按下）。默认物理键：0；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey10Up": {
+    "documentation": "键鼠：奇匠按键10（抬起）。默认物理键：0；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey11Down": {
+    "documentation": "键鼠：奇匠按键11（按下）。默认物理键：U；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey11Up": {
+    "documentation": "键鼠：奇匠按键11（抬起）。默认物理键：U；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey12Down": {
+    "documentation": "键鼠：奇匠按键12（按下）。默认物理键：Z；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey12Up": {
+    "documentation": "键鼠：奇匠按键12（抬起）。默认物理键：Z；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey13Down": {
+    "documentation": "键鼠：奇匠按键13（按下）。默认物理键：Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey13Up": {
+    "documentation": "键鼠：奇匠按键13（抬起）。默认物理键：Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey14Down": {
+    "documentation": "键鼠：奇匠按键14（按下）。默认物理键：G；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey14Up": {
+    "documentation": "键鼠：奇匠按键14（抬起）。默认物理键：G；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey15Down": {
+    "documentation": "键鼠：奇匠按键15（按下）。默认物理键：H；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey15Up": {
+    "documentation": "键鼠：奇匠按键15（抬起）。默认物理键：H；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey16Down": {
+    "documentation": "键鼠：奇匠按键16（按下）。默认物理键：I；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey16Up": {
+    "documentation": "键鼠：奇匠按键16（抬起）。默认物理键：I；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey17Down": {
+    "documentation": "键鼠：奇匠按键17（按下）。默认物理键：O；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey17Up": {
+    "documentation": "键鼠：奇匠按键17（抬起）。默认物理键：O；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey18Down": {
+    "documentation": "键鼠：奇匠按键18（按下）。默认物理键：P；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey18Up": {
+    "documentation": "键鼠：奇匠按键18（抬起）。默认物理键：P；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey19Down": {
+    "documentation": "键鼠：奇匠按键19（按下）。默认物理键：J；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey19Up": {
+    "documentation": "键鼠：奇匠按键19（抬起）。默认物理键：J；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey1Down": {
+    "documentation": "键鼠：奇匠按键1（按下）。默认物理键：1；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey1Up": {
+    "documentation": "键鼠：奇匠按键1（抬起）。默认物理键：1；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey20Down": {
+    "documentation": "键鼠：奇匠按键20（按下）。默认物理键：K；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey20Up": {
+    "documentation": "键鼠：奇匠按键20（抬起）。默认物理键：K；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey21Down": {
+    "documentation": "键鼠：奇匠按键21（按下）。默认物理键：L；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey21Up": {
+    "documentation": "键鼠：奇匠按键21（抬起）。默认物理键：L；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey22Down": {
+    "documentation": "键鼠：奇匠按键22（按下）。默认物理键：V；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey22Up": {
+    "documentation": "键鼠：奇匠按键22（抬起）。默认物理键：V；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey23Down": {
+    "documentation": "键鼠：奇匠按键23（按下）。默认物理键：F5；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey23Up": {
+    "documentation": "键鼠：奇匠按键23（抬起）。默认物理键：F5；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey24Down": {
+    "documentation": "键鼠：奇匠按键24（按下）。默认物理键：F6；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey24Up": {
+    "documentation": "键鼠：奇匠按键24（抬起）。默认物理键：F6；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey25Down": {
+    "documentation": "键鼠：奇匠按键25（按下）。默认物理键：F7；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey25Up": {
+    "documentation": "键鼠：奇匠按键25（抬起）。默认物理键：F7；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey26Down": {
+    "documentation": "键鼠：奇匠按键26（按下）。默认物理键：F8；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey26Up": {
+    "documentation": "键鼠：奇匠按键26（抬起）。默认物理键：F8；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey27Down": {
+    "documentation": "键鼠：奇匠按键27（按下）。默认物理键：F9；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey27Up": {
+    "documentation": "键鼠：奇匠按键27（抬起）。默认物理键：F9；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey28Down": {
+    "documentation": "键鼠：奇匠按键28（按下）。默认物理键：F10；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey28Up": {
+    "documentation": "键鼠：奇匠按键28（抬起）。默认物理键：F10；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey29Down": {
+    "documentation": "键鼠：奇匠按键29（按下）。默认物理键：`（反引号）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey29Up": {
+    "documentation": "键鼠：奇匠按键29（抬起）。默认物理键：`（反引号）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey2Down": {
+    "documentation": "键鼠：奇匠按键2（按下）。默认物理键：2；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey2Up": {
+    "documentation": "键鼠：奇匠按键2（抬起）。默认物理键：2；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey30Down": {
+    "documentation": "键鼠：奇匠按键30（按下）。默认物理键：-；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey30Up": {
+    "documentation": "键鼠：奇匠按键30（抬起）。默认物理键：-；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey31Down": {
+    "documentation": "键鼠：奇匠按键31（按下）。默认物理键：=；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey31Up": {
+    "documentation": "键鼠：奇匠按键31（抬起）。默认物理键：=；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey32Down": {
+    "documentation": "键鼠：奇匠按键32（按下）。默认物理键：[；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey32Up": {
+    "documentation": "键鼠：奇匠按键32（抬起）。默认物理键：[；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey33Down": {
+    "documentation": "键鼠：奇匠按键33（按下）。默认物理键：,；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey33Up": {
+    "documentation": "键鼠：奇匠按键33（抬起）。默认物理键：,；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey34Down": {
+    "documentation": "键鼠：奇匠按键34（按下）。默认物理键：.；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey34Up": {
+    "documentation": "键鼠：奇匠按键34（抬起）。默认物理键：.；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey35Down": {
+    "documentation": "键鼠：奇匠按键35（按下）。默认物理键：/；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey35Up": {
+    "documentation": "键鼠：奇匠按键35（抬起）。默认物理键：/；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey36Down": {
+    "documentation": "键鼠：奇匠按键36（按下）。默认物理键：↑；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey36Up": {
+    "documentation": "键鼠：奇匠按键36（抬起）。默认物理键：↑；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey37Down": {
+    "documentation": "键鼠：奇匠按键37（按下）。默认物理键：↓；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey37Up": {
+    "documentation": "键鼠：奇匠按键37（抬起）。默认物理键：↓；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey38Down": {
+    "documentation": "键鼠：奇匠按键38（按下）。默认物理键：←；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey38Up": {
+    "documentation": "键鼠：奇匠按键38（抬起）。默认物理键：←；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey39Down": {
+    "documentation": "键鼠：奇匠按键39（按下）。默认物理键：→；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey39Up": {
+    "documentation": "键鼠：奇匠按键39（抬起）。默认物理键：→；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey3Down": {
+    "documentation": "键鼠：奇匠按键3（按下）。默认物理键：3；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey3Up": {
+    "documentation": "键鼠：奇匠按键3（抬起）。默认物理键：3；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey40Down": {
+    "documentation": "键鼠：奇匠按键40（按下）。默认物理键：右Ctrl；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey40Up": {
+    "documentation": "键鼠：奇匠按键40（抬起）。默认物理键：右Ctrl；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey41Down": {
+    "documentation": "键鼠：奇匠按键41（按下）。默认物理键：右Shift；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey41Up": {
+    "documentation": "键鼠：奇匠按键41（抬起）。默认物理键：右Shift；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey42Down": {
+    "documentation": "键鼠：奇匠按键42（按下）。默认物理键：Backspace；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey42Up": {
+    "documentation": "键鼠：奇匠按键42（抬起）。默认物理键：Backspace；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey43Down": {
+    "documentation": "键鼠：奇匠按键43（按下）。默认物理键：CapsLock；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey43Up": {
+    "documentation": "键鼠：奇匠按键43（抬起）。默认物理键：CapsLock；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey4Down": {
+    "documentation": "键鼠：奇匠按键4（按下）。默认物理键：4；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey4Up": {
+    "documentation": "键鼠：奇匠按键4（抬起）。默认物理键：4；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey5Down": {
+    "documentation": "键鼠：奇匠按键5（按下）。默认物理键：5；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey5Up": {
+    "documentation": "键鼠：奇匠按键5（抬起）。默认物理键：5；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey6Down": {
+    "documentation": "键鼠：奇匠按键6（按下）。默认物理键：6；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey6Up": {
+    "documentation": "键鼠：奇匠按键6（抬起）。默认物理键：6；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey7Down": {
+    "documentation": "键鼠：奇匠按键7（按下）。默认物理键：7；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey7Up": {
+    "documentation": "键鼠：奇匠按键7（抬起）。默认物理键：7；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey8Down": {
+    "documentation": "键鼠：奇匠按键8（按下）。默认物理键：8；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey8Up": {
+    "documentation": "键鼠：奇匠按键8（抬起）。默认物理键：8；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey9Down": {
+    "documentation": "键鼠：奇匠按键9（按下）。默认物理键：9；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardCraftspersonKey9Up": {
+    "documentation": "键鼠：奇匠按键9（抬起）。默认物理键：9；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardDropKeyDown": {
+    "documentation": "键鼠：落下（按下）。默认物理键：X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardDropKeyUp": {
+    "documentation": "键鼠：落下（抬起）。默认物理键：X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardInteractKeyDown": {
+    "documentation": "键鼠：拾取/交互（按下）。默认物理键：F；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardInteractKeyUp": {
+    "documentation": "键鼠：拾取/交互（抬起）。默认物理键：F；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardJumpKeyDown": {
+    "documentation": "键鼠：跳跃（按下）。默认物理键：Space；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardJumpKeyUp": {
+    "documentation": "键鼠：跳跃（抬起）。默认物理键：Space；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveBackwardKeyDown": {
+    "documentation": "键鼠：向后移动（按下）。默认物理键：S；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveBackwardKeyUp": {
+    "documentation": "键鼠：向后移动（抬起）。默认物理键：S；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveForwardKeyDown": {
+    "documentation": "键鼠：向前移动（按下）。默认物理键：W；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveForwardKeyUp": {
+    "documentation": "键鼠：向前移动（抬起）。默认物理键：W；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveLeftKeyDown": {
+    "documentation": "键鼠：向左移动（按下）。默认物理键：A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveLeftKeyUp": {
+    "documentation": "键鼠：向左移动（抬起）。默认物理键：A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveRightKeyDown": {
+    "documentation": "键鼠：向右移动（按下）。默认物理键：D；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardMoveRightKeyUp": {
+    "documentation": "键鼠：向右移动（抬起）。默认物理键：D；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardNormalAttackKeyDown": {
+    "documentation": "键鼠：普通攻击（按下）。默认物理键：鼠标左键；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardNormalAttackKeyUp": {
+    "documentation": "键鼠：普通攻击（抬起）。默认物理键：鼠标左键；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardOpenShortcutWheelKeyDown": {
+    "documentation": "键鼠：呼出快捷轮盘（按下）。默认物理键：Tab；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardOpenShortcutWheelKeyUp": {
+    "documentation": "键鼠：呼出快捷轮盘（抬起）。默认物理键：Tab；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardSprintKeyDown": {
+    "documentation": "键鼠：冲刺（按下）。默认物理键：鼠标右键；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardSprintKeyUp": {
+    "documentation": "键鼠：冲刺（抬起）。默认物理键：鼠标右键；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardSwitchToWalkOrRunKeyDown": {
+    "documentation": "键鼠：切换行走/奔跑状态（按下）。默认物理键：左Ctrl；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyEventTypeItems.KeyboardSwitchToWalkOrRunKeyUp": {
+    "documentation": "键鼠：切换行走/奔跑状态（抬起）。默认物理键：左Ctrl；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CharacterSkill1Key": {
+    "documentation": "角色技能1。默认物理键：E；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CharacterSkill2Key": {
+    "documentation": "角色技能2。默认物理键：Q；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CharacterSkill3Key": {
+    "documentation": "角色技能3。默认物理键：R；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CharacterSkill4Key": {
+    "documentation": "角色技能4。默认物理键：T；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey1": {
+    "documentation": "奇匠按键1。默认物理键：1；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey10": {
+    "documentation": "奇匠按键10。默认物理键：0；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey11": {
+    "documentation": "奇匠按键11。默认物理键：U；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey12": {
+    "documentation": "奇匠按键12。默认物理键：Z；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey13": {
+    "documentation": "奇匠按键13。默认物理键：Y；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey14": {
+    "documentation": "奇匠按键14。默认物理键：G；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey15": {
+    "documentation": "奇匠按键15。默认物理键：H；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey16": {
+    "documentation": "奇匠按键16。默认物理键：I；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey17": {
+    "documentation": "奇匠按键17。默认物理键：O；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey18": {
+    "documentation": "奇匠按键18。默认物理键：P；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey19": {
+    "documentation": "奇匠按键19。默认物理键：J；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey2": {
+    "documentation": "奇匠按键2。默认物理键：2；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey20": {
+    "documentation": "奇匠按键20。默认物理键：K；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey21": {
+    "documentation": "奇匠按键21。默认物理键：L；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey22": {
+    "documentation": "奇匠按键22。默认物理键：V；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey23": {
+    "documentation": "奇匠按键23。默认物理键：F5；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey24": {
+    "documentation": "奇匠按键24。默认物理键：F6；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey25": {
+    "documentation": "奇匠按键25。默认物理键：F7；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey26": {
+    "documentation": "奇匠按键26。默认物理键：F8；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey27": {
+    "documentation": "奇匠按键27。默认物理键：F9；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey28": {
+    "documentation": "奇匠按键28。默认物理键：F10；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey29": {
+    "documentation": "奇匠按键29。默认物理键：`（反引号）；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey3": {
+    "documentation": "奇匠按键3。默认物理键：3；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey30": {
+    "documentation": "奇匠按键30。默认物理键：-；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey31": {
+    "documentation": "奇匠按键31。默认物理键：=；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey32": {
+    "documentation": "奇匠按键32。默认物理键：[；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey33": {
+    "documentation": "奇匠按键33。默认物理键：,；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey34": {
+    "documentation": "奇匠按键34。默认物理键：.；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey35": {
+    "documentation": "奇匠按键35。默认物理键：/；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey36": {
+    "documentation": "奇匠按键36。默认物理键：↑；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey37": {
+    "documentation": "奇匠按键37。默认物理键：↓；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey38": {
+    "documentation": "奇匠按键38。默认物理键：←；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey39": {
+    "documentation": "奇匠按键39。默认物理键：→；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey4": {
+    "documentation": "奇匠按键4。默认物理键：4；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey40": {
+    "documentation": "奇匠按键40。默认物理键：右Ctrl；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey41": {
+    "documentation": "奇匠按键41。默认物理键：右Shift；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey42": {
+    "documentation": "奇匠按键42。默认物理键：Backspace；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey43": {
+    "documentation": "奇匠按键43。默认物理键：CapsLock；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey5": {
+    "documentation": "奇匠按键5。默认物理键：5；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey6": {
+    "documentation": "奇匠按键6。默认物理键：6；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey7": {
+    "documentation": "奇匠按键7。默认物理键：7；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey8": {
+    "documentation": "奇匠按键8。默认物理键：8；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.CraftspersonKey9": {
+    "documentation": "奇匠按键9。默认物理键：9；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.DropKey": {
+    "documentation": "落下。默认物理键：X；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.InteractKey": {
+    "documentation": "拾取/交互。默认物理键：F；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.JumpKey": {
+    "documentation": "跳跃。默认物理键：Space；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.MoveBackwardKey": {
+    "documentation": "向后移动。默认物理键：S；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.MoveForwardKey": {
+    "documentation": "向前移动。默认物理键：W；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.MoveLeftKey": {
+    "documentation": "向左移动。默认物理键：A；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.MoveRightKey": {
+    "documentation": "向右移动。默认物理键：D；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.None": {
+    "documentation": "无。默认物理键：无；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.NormalAttackKey": {
+    "documentation": "普通攻击。默认物理键：鼠标左键；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.OpenShortcutWheelKey": {
+    "documentation": "呼出快捷轮盘。默认物理键：Tab；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.SprintKey": {
+    "documentation": "冲刺。默认物理键：鼠标右键；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumKeyboardKeyCodeItems.SwitchToWalkOrRunKey": {
+    "documentation": "切换行走/奔跑状态。默认物理键：左Ctrl；实际按键以当前配置为准。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageChs": {
+    "documentation": "简体中文。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageCht": {
+    "documentation": "繁体中文。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageDeu": {
+    "documentation": "德语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageEng": {
+    "documentation": "英语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageFra": {
+    "documentation": "法语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageInd": {
+    "documentation": "印度尼西亚语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageIta": {
+    "documentation": "意大利语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageJpn": {
+    "documentation": "日语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageKor": {
+    "documentation": "韩语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageNone": {
+    "documentation": "未指定。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguagePor": {
+    "documentation": "葡萄牙语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageRus": {
+    "documentation": "俄语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageSpa": {
+    "documentation": "西班牙语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageTha": {
+    "documentation": "泰语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageTur": {
+    "documentation": "土耳其语。"
+  },
+  "@miliastra/globaltype/EnumLanguageTypeItems.LanguageVie": {
+    "documentation": "越南语。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Bool": {
+    "documentation": "布尔值。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.BoolList": {
+    "documentation": "布尔值列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.ConfigId": {
+    "documentation": "配置 ID。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.ConfigIdList": {
+    "documentation": "配置 ID 列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Entity": {
+    "documentation": "实体。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.EntityList": {
+    "documentation": "实体列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Float": {
+    "documentation": "浮点数。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.FloatList": {
+    "documentation": "浮点数列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Guid": {
+    "documentation": "GUID。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.GuidList": {
+    "documentation": "GUID 列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Int": {
+    "documentation": "整数。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.IntList": {
+    "documentation": "整数列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.PrefabId": {
+    "documentation": "元件 ID。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.PrefabIdList": {
+    "documentation": "元件 ID 列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.String": {
+    "documentation": "字符串。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.StringList": {
+    "documentation": "字符串列表。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Vector3": {
+    "documentation": "三维向量。"
+  },
+  "@miliastra/globaltype/EnumParamTypeItems.Vector3List": {
+    "documentation": "三维向量列表。"
+  },
+  "@miliastra/globaltype/EnumScrollAlignTypeItems.Bottom": {
+    "documentation": "底部对齐。"
+  },
+  "@miliastra/globaltype/EnumScrollAlignTypeItems.Center": {
+    "documentation": "居中对齐。"
+  },
+  "@miliastra/globaltype/EnumScrollAlignTypeItems.Top": {
+    "documentation": "顶部对齐。"
+  },
+  "@miliastra/globaltype/EnumScrollDirectionItems.Horizontal": {
+    "documentation": "水平滚动。"
+  },
+  "@miliastra/globaltype/EnumScrollDirectionItems.Vertical": {
+    "documentation": "垂直滚动。"
+  },
+  "@miliastra/globaltype/EnumScrollLayoutConstraintItems.AutoWrap": {
+    "documentation": "自动换行布局。"
+  },
+  "@miliastra/globaltype/EnumScrollLayoutConstraintItems.Fixed": {
+    "documentation": "固定行数或列数布局。"
+  },
+  "@miliastra/globaltype/EnumStageModeItems.Beyond": {
+    "documentation": "超限模式。"
+  },
+  "@miliastra/globaltype/EnumStageModeItems.Classic": {
+    "documentation": "经典模式。"
+  },
+  "@miliastra/globaltype/EnumTextHorizontalAlignmentItems.Left": {
+    "documentation": "左对齐。"
+  },
+  "@miliastra/globaltype/EnumTextHorizontalAlignmentItems.Middle": {
+    "documentation": "水平居中。"
+  },
+  "@miliastra/globaltype/EnumTextHorizontalAlignmentItems.Right": {
+    "documentation": "右对齐。"
+  },
+  "@miliastra/globaltype/EnumTextVerticalAlignmentItems.Bottom": {
+    "documentation": "底部对齐。"
+  },
+  "@miliastra/globaltype/EnumTextVerticalAlignmentItems.Middle": {
+    "documentation": "垂直居中。"
+  },
+  "@miliastra/globaltype/EnumTextVerticalAlignmentItems.Top": {
+    "documentation": "顶部对齐。"
+  },
+  "@miliastra/globaltype/EnumUIAnimationLayerItems.AboveAllControls": {
+    "documentation": "所有控件之上。"
+  },
+  "@miliastra/globaltype/EnumUIAnimationLayerItems.BelowAllControls": {
+    "documentation": "所有控件之下。"
   },
   "@miliastra/globaltype/Enums.ControllerKeyCode": {
     "documentation": "手柄按键码"
@@ -630,7 +1833,7 @@
     "documentation": "获取 UI 画布宽高。"
   },
   "@miliastra/globaltype/Game.InstantiateClientUIControl": {
-    "documentation": "根据已配置的 UI 元件创建控件实例。"
+    "documentation": "根据已配置的控件模板根索引，在 parent 下创建控件实例；不能使用运行时控件 ID 或脚本映射 ID。"
   },
   "@miliastra/globaltype/Game.IsAudioAlive": {
     "documentation": "查询音效实例是否存活。"
@@ -692,17 +1895,14 @@
   "@miliastra/globaltype/Script.enabled": {
     "documentation": "脚本启用状态。"
   },
-  "@miliastra/globaltype/Script.id": {
-    "documentation": "脚本实例 ID。"
-  },
   "@miliastra/globaltype/Script.object": {
     "documentation": "脚本所挂载的宿主对象。"
   },
   "@miliastra/globaltype/Script.path": {
     "documentation": "脚本路径。"
   },
-  "@miliastra/globaltype/Script.prefabId": {
-    "documentation": "脚本元件 ID。"
+  "@miliastra/globaltype/Script.scriptMappingId": {
+    "documentation": "脚本映射 ID（只读），可传给控件的 GetScript。"
   },
   "@miliastra/globaltype/ServerSignal.AddBool": {
     "documentation": "添加布尔值参数。"
@@ -756,31 +1956,31 @@
     "documentation": "添加字符串列表参数。"
   },
   "@miliastra/globaltype/ServerSignal.AddVector3": {
-    "documentation": "添加三维向量参数。"
+    "documentation": "添加三维向量参数，传入包含数值分量 x、y、z 的表。"
   },
   "@miliastra/globaltype/ServerSignal.AddVector3List": {
-    "documentation": "添加三维向量列表参数。"
+    "documentation": "添加三维向量列表，每项均为包含数值分量 x、y、z 的表。"
   },
   "@miliastra/globaltype/ServerSignal.SendSignal": {
     "documentation": "向服务器发送已编排好的信号。"
   },
   "@miliastra/globaltype/Tween.Complete": {
-    "documentation": "立即切换到结束状态。"
+    "documentation": "立即切换到结束状态。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/Tween.Kill": {
-    "documentation": "销毁实例；true 立即结束并触发完成回调，false 保持当前状态结束且不触发。"
+    "documentation": "销毁实例；true 立即结束并触发完成回调，false 保持当前状态结束且不触发。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/Tween.Pause": {
-    "documentation": "暂停并保留当前进度。"
+    "documentation": "暂停并保留当前进度。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/Tween.Play": {
     "documentation": "开始播放并返回自身。"
   },
   "@miliastra/globaltype/Tween.Restart": {
-    "documentation": "回到开始状态并重新播放。"
+    "documentation": "回到开始状态并重新播放。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/Tween.Resume": {
-    "documentation": "从暂停处继续播放。"
+    "documentation": "从暂停处继续播放。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/Tween.SetEase": {
     "documentation": "设置缓动类型并返回自身。"
@@ -807,7 +2007,7 @@
     "documentation": "在序列末尾接入等待间隔。"
   },
   "@miliastra/globaltype/TweenSequence.Complete": {
-    "documentation": "立即完成整个序列。"
+    "documentation": "立即完成整个序列。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/TweenSequence.Insert": {
     "documentation": "在指定时间点插入 Tween。"
@@ -819,19 +2019,19 @@
     "documentation": "与当前队尾步骤并行，结束以较晚者为准。"
   },
   "@miliastra/globaltype/TweenSequence.Kill": {
-    "documentation": "销毁序列；true 立即结束，false 保持当前状态结束。"
+    "documentation": "销毁序列；true 立即结束，false 保持当前状态结束。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/TweenSequence.Pause": {
-    "documentation": "暂停序列。"
+    "documentation": "暂停序列。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/TweenSequence.Play": {
     "documentation": "开始播放并返回自身。"
   },
   "@miliastra/globaltype/TweenSequence.Restart": {
-    "documentation": "回到初始状态并重新播放。"
+    "documentation": "回到初始状态并重新播放。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/TweenSequence.Resume": {
-    "documentation": "继续播放序列。"
+    "documentation": "继续播放序列。无返回值，不支持继续链式调用。"
   },
   "@miliastra/globaltype/TweenSequence.SetLoops": {
     "documentation": "设置循环次数，-1 无限循环。"

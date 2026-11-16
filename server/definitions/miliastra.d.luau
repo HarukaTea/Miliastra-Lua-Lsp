@@ -597,7 +597,7 @@ end
 declare extern type ClientUIBaseControl with
     read alive: boolean
     read id: number
-    read prefabId: number
+    read prefabIndex: number
     read active: boolean
     read activeInHierarchy: boolean
     read visible: boolean
@@ -644,10 +644,10 @@ declare extern type ClientUIBaseControl with
     function GetLocalRotation(self): (number, number, number)
     function SetLocalRotation(self, x: number, y: number, z: number): ()
     function GetScriptByPath(self, scriptPath: string): Script
-    function GetScript(self, scriptPrefabId: number): Script
+    function GetScript(self, scriptMappingId: number): Script
     function GetScripts(self): {Script}
-    function AddKeyEventListener(self, eventType: EnumKeyEventType, callback: () -> ()): ()
-    function RemoveKeyEventListener(self, eventType: EnumKeyEventType, callback: () -> ()): ()
+    function AddKeyEventListener(self, eventType: EnumKeyEventType, callback: () -> boolean): ()
+    function RemoveKeyEventListener(self, eventType: EnumKeyEventType, callback: () -> boolean): ()
     function RemoveKeyEventListeners(self, eventType: EnumKeyEventType): ()
     function RemoveAllKeyEventListeners(self): ()
     function AddNavigationEventListener(self, eventType: EnumControllerNavigationEventType, callback: () -> ()): ()
@@ -669,7 +669,7 @@ declare extern type CursorEventData with
 end
 
 declare extern type Game with
-    read InstantiateClientUIControl: (uiPrefabId: number, parent: ClientUIBaseControl) -> ClientUIBaseControl
+    read InstantiateClientUIControl: (controlPrefabIndex: number, parent: ClientUIBaseControl) -> ClientUIBaseControl
     read DestroyClientUIControl: (control: ClientUIBaseControl) -> ()
     read GetClientUIControl: (controlId: number) -> ClientUIBaseControl
     read FindClientUIRoot: (nodeName: string) -> ClientUIBaseControl
@@ -699,8 +699,7 @@ end
 
 declare extern type Script with
     read alive: boolean
-    read id: number
-    read prefabId: number
+    read scriptMappingId: number
     read object: any
     read path: string
     enabled: boolean
@@ -717,12 +716,12 @@ declare extern type ServerSignal with
     function AddParam(self, paramType: EnumParamType, paramValue: any): ()
     function SendSignal(self): ()
     function AddFloatList(self, floatListValue: {number}): ()
-    function AddVector3(self, vector3Value: {[any]: any}): ()
+    function AddVector3(self, vector3Value: {x: number, y: number, z: number}): ()
     function AddIntList(self, intListValue: {number}): ()
     function AddBoolList(self, boolListValue: {boolean}): ()
     function AddPrefabIdList(self, prefabIdListValue: {number}): ()
     function AddConfigId(self, configIdValue: number): ()
-    function AddVector3List(self, vector3ListValue: {{[any]: any}}): ()
+    function AddVector3List(self, vector3ListValue: {{x: number, y: number, z: number}}): ()
     function AddString(self, stringValue: string): ()
     function AddGuidList(self, guidListValue: {number}): ()
     function AddEntityList(self, entityListValue: {number}): ()
@@ -738,11 +737,11 @@ end
 
 declare extern type Tween with
     function Play(self): Tween
-    function Pause(self): Tween
-    function Resume(self): Tween
-    function Restart(self): Tween
-    function Complete(self): Tween
-    function Kill(self, complete: boolean): Tween
+    function Pause(self): ()
+    function Resume(self): ()
+    function Restart(self): ()
+    function Complete(self): ()
+    function Kill(self, complete: boolean): ()
     function SetOnStepComplete(self, onStepComplete: () -> ()): Tween
     function SetLoops(self, times: number): Tween
     function SetEase(self, easeType: EnumEaseType): Tween
@@ -758,11 +757,11 @@ declare extern type TweenSequence with
     function Insert(self, time: number, tween: Tween): TweenSequence
     function InsertCallback(self, time: number, callback: () -> ()): TweenSequence
     function Play(self): TweenSequence
-    function Pause(self): TweenSequence
-    function Resume(self): TweenSequence
-    function Restart(self): TweenSequence
-    function Complete(self): TweenSequence
-    function Kill(self, complete: boolean): TweenSequence
+    function Pause(self): ()
+    function Resume(self): ()
+    function Restart(self): ()
+    function Complete(self): ()
+    function Kill(self, complete: boolean): ()
     function SetOnComplete(self, onComplete: () -> ()): TweenSequence
     function SetOnStepComplete(self, onStepComplete: () -> ()): TweenSequence
     function SetLoops(self, times: number): TweenSequence
@@ -799,7 +798,7 @@ end
 
 declare extern type ClientUIGridScrollerControl extends ClientUIBaseControl with
     read itemCount: number
-    itemPrefabId: number
+    itemPrefabIndex: number
     raycastTarget: boolean
     showScrollBar: boolean
     interactable: boolean
@@ -862,7 +861,7 @@ declare extern type ClientUIPresetButtonControl extends ClientUIBaseControl with
 end
 
 declare extern type ClientUIReferenceControl extends ClientUIBaseControl with
-    read referencedPrefabId: number
+    read referencedPrefabIndex: number
 end
 
 declare extern type ClientUITextBoxControl extends ClientUIBaseControl with
@@ -905,3 +904,36 @@ declare Enum: Enums
 declare game: Game
 declare script: Script
 declare printerr: (...any) -> ()
+
+-- Lua 5.3 math library, plus the two documented Miliastra extensions.
+declare math: {
+    abs: (x: number) -> number,
+    acos: (x: number) -> number,
+    asin: (x: number) -> number,
+    atan: (y: number, x: number?) -> number,
+    ceil: (x: number) -> number,
+    cos: (x: number) -> number,
+    deg: (x: number) -> number,
+    exp: (x: number) -> number,
+    floor: (x: number) -> number,
+    fmod: (x: number, y: number) -> number,
+    huge: number,
+    log: (x: number, base: number?) -> number,
+    max: (number, ...number) -> number,
+    maxinteger: number,
+    min: (number, ...number) -> number,
+    mininteger: number,
+    modf: (x: number) -> (number, number),
+    pi: number,
+    rad: (x: number) -> number,
+    random: (m: number?, n: number?) -> number,
+    randomseed: (seed: number) -> (),
+    sin: (x: number) -> number,
+    sqrt: (x: number) -> number,
+    tan: (x: number) -> number,
+    tointeger: (x: any) -> number?,
+    type: (x: any) -> ("integer" | "float")?,
+    ult: (m: number, n: number) -> boolean,
+    isnan: (x: number) -> boolean,
+    isinf: (x: number) -> boolean,
+}
