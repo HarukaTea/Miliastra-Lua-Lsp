@@ -1,3 +1,34 @@
+diff --git a/Analysis/include/Luau/FileResolver.h b/Analysis/include/Luau/FileResolver.h
+index b43e203..ada9b17 100644
+--- a/Analysis/include/Luau/FileResolver.h
++++ b/Analysis/include/Luau/FileResolver.h
+@@ -103,8 +103,7 @@ struct RequireSuggester
+ protected:
+     virtual std::unique_ptr<RequireNode> getNode(const ModuleName& name) const = 0;
+
+-private:
+-    std::optional<RequireSuggestions> getRequireSuggestionsImpl(const ModuleName& requirer, const std::optional<std::string>& path) const;
++    virtual std::optional<RequireSuggestions> getRequireSuggestionsImpl(const ModuleName& requirer, const std::optional<std::string>& path) const;
+ };
+
+ struct FileResolver
+diff --git a/Analysis/src/AutocompleteCore.cpp b/Analysis/src/AutocompleteCore.cpp
+index b62fa53..ac4d852 100644
+--- a/Analysis/src/AutocompleteCore.cpp
++++ b/Analysis/src/AutocompleteCore.cpp
+@@ -1905,6 +1905,12 @@ static std::optional<AutocompleteEntryMap> autocompleteStringParams(
+         {
+             if (tag == kRequireTagName && fileResolver)
+             {
++                // A completion replaces the whole string, but only the prefix before the cursor
++                // selects the directory. Byte columns map directly into ordinary unescaped strings.
++                const auto& loc = nodes.back()->location;
++                if (candidateString && loc.begin.line == loc.end.line && loc.begin < position && position < loc.end &&
++                    loc.end.column - loc.begin.column == candidateString->size() + 2)
++                    candidateString->resize(position.column - loc.begin.column - 1);
+                 return convertRequireSuggestionsToAutocompleteEntryMap(fileResolver->getRequireSuggestions(module->name, candidateString));
+             }
+             if (std::optional<AutocompleteEntryMap> ret = callback(tag, getMethodContainingExternType(module, candidate->func), candidateString))
 diff --git a/Analysis/src/Linter.cpp b/Analysis/src/Linter.cpp
 index 60f569e..cf8d7cd 100644
 --- a/Analysis/src/Linter.cpp
@@ -119,10 +150,18 @@ index 152a268..061aa45 100644
              }
 
 diff --git a/Ast/include/Luau/Parser.h b/Ast/include/Luau/Parser.h
-index 15ff0ee..611ee4c 100644
+index 15ff0ee..a6fc372 100644
 --- a/Ast/include/Luau/Parser.h
 +++ b/Ast/include/Luau/Parser.h
-@@ -221,6 +221,16 @@ private:
+@@ -103,6 +103,7 @@ private:
+     AstStatBlock* parseBlock();
+
+     AstStatBlock* parseBlockNoScope();
++    bool startsLabelAfterExpression() const;
+
+     // stat ::=
+     // varlist `=' explist |
+@@ -221,6 +222,16 @@ private:
      );
  
      // var [`+=' | `-=' | `*=' | `/=' | `%=' | `^=' | `..='] exp
@@ -139,7 +178,20 @@ index 15ff0ee..611ee4c 100644
      AstStat* parseCompoundAssignment(AstExpr* initial, AstExprBinary::Op op);
  
      std::pair<AstLocal*, AstArray<AstLocal*>> prepareFunctionArguments(const Location& start, bool hasself, const TempVector<Binding>& args);
-@@ -535,6 +545,7 @@ private:
+@@ -481,10 +492,12 @@ private:
+
+     void nextLexeme();
+
++    struct GotoBlock;
+     struct Function
+     {
+         bool vararg;
+         unsigned int loopDepth;
++        GotoBlock* gotoBlock = nullptr;
+
+         Function()
+             : vararg(false)
+@@ -535,6 +548,7 @@ private:
  
      ParseOptions options;
  
@@ -147,11 +199,49 @@ index 15ff0ee..611ee4c 100644
      Lexer lexer;
      Allocator& allocator;
  
+diff --git a/Ast/src/Lexer.cpp b/Ast/src/Lexer.cpp
+index 72c2ee1..556e909 100644
+--- a/Ast/src/Lexer.cpp
++++ b/Ast/src/Lexer.cpp
+@@ -680,6 +680,25 @@ Lexeme Lexer::readNumber(const Position& start, unsigned int startOffset)
+ {
+     LUAU_ASSERT(isDigit(peekch()));
+
++    // In hexadecimal literals e/E are digits and p/P introduces a signed
++    // binary exponent. Leave value and malformed-literal checks to the parser.
++    if (offset == startOffset && peekch() == '0' && (peekch(1) == 'x' || peekch(1) == 'X'))
++    {
++        consume();
++        consume();
++        while (isHexDigit(peekch()) || peekch() == '.' || peekch() == '_')
++            consume();
++        if (peekch() == 'p' || peekch() == 'P')
++        {
++            consume();
++            if (peekch() == '+' || peekch() == '-')
++                consume();
++        }
++        while (isAlpha(peekch()) || isDigit(peekch()) || peekch() == '_')
++            consume();
++        return Lexeme(Location(start, position()), Lexeme::Number, &buffer[startOffset], offset - startOffset);
++    }
++
+     // This function does not do the number parsing - it only skips a number-like pattern.
+     // It uses the same logic as Lua stock lexer; the resulting string is later converted
+     // to a number with proper verification.
 diff --git a/Ast/src/Parser.cpp b/Ast/src/Parser.cpp
-index 9aba25a..79d44e2 100644
+index 9aba25a..c6389d2 100644
 --- a/Ast/src/Parser.cpp
 +++ b/Ast/src/Parser.cpp
-@@ -311,6 +311,7 @@ ParseNodeResult<AstType> Parser::parseType(const char* buffer, size_t bufferSize
+@@ -6,6 +6,7 @@
+ #include "Luau/TimeTrace.h"
+
+ #include <algorithm>
++#include <unordered_map>
+ #include <unordered_set>
+
+ #include <errno.h>
+@@ -311,6 +312,7 @@ ParseNodeResult<AstType> Parser::parseType(const char* buffer, size_t bufferSize
  
  Parser::Parser(const char* buffer, size_t bufferSize, AstNameTable& names, Allocator& allocator, const ParseOptions& options)
      : options(options)
@@ -159,7 +249,99 @@ index 9aba25a..79d44e2 100644
      , lexer(buffer, bufferSize, names, options.parseFragment ? options.parseFragment->resumePosition : Position(0, 0))
      , allocator(allocator)
      , recursionCounter(0)
-@@ -485,6 +486,17 @@ AstStat* Parser::parseStat()
+@@ -388,17 +390,64 @@ AstStatBlock* Parser::parseBlock()
+
+ static bool isStatLast(AstStat* stat)
+ {
+-    return stat->is<AstStatBreak>() || stat->is<AstStatContinue>() || stat->is<AstStatReturn>();
++    return stat->is<AstStatContinue>() || stat->is<AstStatReturn>();
++}
++
++// Label visibility ends at the nearest enclosing block; unresolved jumps pass
++// to its parent, up to the function boundary. These nodes are analysis-only.
++struct Parser::GotoBlock
++{
++    struct Label
++    {
++        AstLocal* lastLocal;
++        size_t statementIndex;
++    };
++    std::unordered_map<const char*, Label> labels;
++    std::vector<Name> jumps;
++};
++
++bool Parser::startsLabelAfterExpression() const
++{
++    Lexer probe = lexer;
++    if (probe.next().type != Lexeme::Name || probe.next().type != Lexeme::DoubleColon)
++        return false;
++    // In "value :: Type  ::label::" the first double colon is a Luau cast.
++    return probe.next().type != Lexeme::Name || probe.next().type != Lexeme::DoubleColon;
+ }
+
+ AstStatBlock* Parser::parseBlockNoScope()
+ {
+     TempVector<AstStat*> body(scratchStat);
++    GotoBlock block;
++    GotoBlock* parent = functionStack.back().gotoBlock;
++    functionStack.back().gotoBlock = &block;
++    size_t statementCount = 0;
+
+     const Position prevPosition = lexer.previousLocation().end;
+
+     while (!blockFollow(lexer.current()))
+     {
++        if (lexer.current().type == ';')
++        {
++            nextLexeme();
++            continue;
++        }
++        if (lexer.current().type == Lexeme::DoubleColon)
++        {
++            nextLexeme();
++            auto name = parseNameOpt("label");
++            expectAndConsume(Lexeme::DoubleColon, "label");
++            if (name && !block.labels.emplace(name->name.value, GotoBlock::Label{localStack.empty() ? nullptr : localStack.back(), statementCount}).second)
++                report(name->location, "Duplicate label '%s' in this block", name->name.value);
++            continue;
++        }
++        ++statementCount;
++        if (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "goto" && lexer.lookahead().type == Lexeme::Name)
++        {
++            nextLexeme();
++            block.jumps.push_back(parseName("goto target"));
++            continue;
++        }
+         unsigned int oldRecursionCount = recursionCounter;
+
+         incrementRecursionCounter("block");
+@@ -422,6 +471,25 @@ AstStatBlock* Parser::parseBlockNoScope()
+
+     const Location location = Location(prevPosition, lexer.current().location.begin);
+
++    for (const Name& jump : block.jumps)
++    {
++        auto it = block.labels.find(jump.name.value);
++        if (it == block.labels.end())
++        {
++            if (parent)
++                parent->jumps.push_back(jump);
++            else
++                report(jump.location, "No visible label '%s' for goto", jump.name.value);
++            continue;
++        }
++        const auto& label = it->second;
++        // Lua puts trailing labels outside the block's locals, except in a
++        // repeat block where those locals remain in scope for the condition.
++        bool trailing = label.statementIndex == statementCount && lexer.current().type != Lexeme::ReservedUntil;
++        if (!trailing && label.lastLocal && jump.location.begin < label.lastLocal->location.begin)
++            report(jump.location, "Goto '%s' jumps into the scope of local '%s'", jump.name.value, label.lastLocal->name.value);
++    }
++    functionStack.back().gotoBlock = parent;
+     return allocator.alloc<AstStatBlock>(location, copy(body));
+ }
+
+@@ -485,6 +553,17 @@ AstStat* Parser::parseStat()
          return parseAssignment(expr);
  
      // if the next token is a compound assignment operator, it's a compound assignment (these don't support multiple variables)
@@ -177,7 +359,7 @@ index 9aba25a..79d44e2 100644
      if (std::optional<AstExprBinary::Op> op = parseCompoundOp(lexer.current()))
          return parseCompoundAssignment(expr, *op);
  
-@@ -3541,6 +3553,80 @@ std::optional<AstExprUnary::Op> Parser::parseUnaryOp(const Lexeme& l)
+@@ -3541,6 +3620,80 @@ std::optional<AstExprUnary::Op> Parser::parseUnaryOp(const Lexeme& l)
          return std::nullopt;
  }
  
@@ -258,7 +440,7 @@ index 9aba25a..79d44e2 100644
  std::optional<AstExprBinary::Op> Parser::parseBinaryOp(const Lexeme& l)
  {
      if (l.type == '+')
-@@ -3661,14 +3747,14 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
+@@ -3661,14 +3814,14 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
  AstExpr* Parser::parseExpr(unsigned int limit)
  {
      static const BinaryOpPriority binaryPriority[] = {
@@ -281,7 +463,7 @@ index 9aba25a..79d44e2 100644
          {3, 3},  // inequality
          {3, 3},  // equality
          {3, 3},  // '<'
-@@ -3686,7 +3772,7 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+@@ -3686,7 +3839,7 @@ AstExpr* Parser::parseExpr(unsigned int limit)
      // this handles recursive calls to parseSubExpr/parseExpr
      incrementRecursionCounter("expression");
  
@@ -290,7 +472,7 @@ index 9aba25a..79d44e2 100644
  
      Location start = lexer.current().location;
  
-@@ -3697,7 +3783,13 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+@@ -3697,7 +3850,13 @@ AstExpr* Parser::parseExpr(unsigned int limit)
      if (!uop)
          uop = checkUnaryConfusables();
  
@@ -305,7 +487,7 @@ index 9aba25a..79d44e2 100644
      {
          Position opPosition = lexer.current().location.begin;
          nextLexeme();
-@@ -3714,26 +3806,36 @@ AstExpr* Parser::parseExpr(unsigned int limit)
+@@ -3714,26 +3873,36 @@ AstExpr* Parser::parseExpr(unsigned int limit)
      }
  
      // expand while operators have priorities higher than `limit'
@@ -361,7 +543,7 @@ index 9aba25a..79d44e2 100644
  
          // note: while the parser isn't recursive here, we're generating recursive structures of unbounded depth
          incrementRecursionCounter("expression");
-@@ -3854,7 +3956,7 @@ AstExpr* Parser::parsePrimaryExpr(bool asStatement)
+@@ -3854,7 +4023,7 @@ AstExpr* Parser::parsePrimaryExpr(bool asStatement)
          {
              expr = parseFunctionArgs(expr, false);
          }
@@ -370,3 +552,21 @@ index 9aba25a..79d44e2 100644
          {
              expr = parseExplicitTypeInstantiationExpr(start, *expr);
          }
+@@ -3933,7 +4102,7 @@ AstExpr* Parser::parseAssertionExpr()
+     Location start = lexer.current().location;
+     AstExpr* expr = parseSimpleExpr();
+
+-    if (lexer.current().type == Lexeme::DoubleColon)
++    if (lexer.current().type == Lexeme::DoubleColon && !startsLabelAfterExpression())
+     {
+         Position opPosition = lexer.current().location.begin;
+         nextLexeme();
+@@ -4046,7 +4215,7 @@ static ConstantNumberParseResult parseDouble(double& result, const char* data)
+         return parseInteger(result, data + 2, 2);
+
+     // hexadecimal literal
+-    if (data[0] == '0' && (data[1] == 'x' || data[1] == 'X') && data[2])
++    if (data[0] == '0' && (data[1] == 'x' || data[1] == 'X') && data[2] && !strpbrk(data, ".pP"))
+         return parseInteger(result, data, 16); // pass in '0x' prefix, it's handled by 'strtoull'
+
+     char* end = nullptr;

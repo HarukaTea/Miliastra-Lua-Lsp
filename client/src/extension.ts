@@ -5,6 +5,7 @@ import { LanguageClient, LanguageClientOptions, SemanticTokensRegistrationType, 
 
 let client: LanguageClient | undefined;
 let clientLifecycle: Promise<void> = Promise.resolve();
+const serverSettingSections = ['completion', 'diagnostics', 'hint', 'runtime', 'signatureHelp', 'workspace'];
 
 function serverSettings(uri?: vscode.Uri) {
     const config = vscode.workspace.getConfiguration('miliastraLsp', uri ?? null);
@@ -53,6 +54,8 @@ export async function activate(context: vscode.ExtensionContext) {
         ],
         middleware: {
             workspace: {
+                // The server registers for every VS Code setting. The scoped listener below owns notifications.
+                didChangeConfiguration: async () => {},
                 configuration: (params) => params.items.map(item => {
                     const scope = item.scopeUri ? vscode.Uri.parse(item.scopeUri) : undefined;
                     return item.section === 'luau-lsp'
@@ -107,18 +110,20 @@ export async function activate(context: vscode.ExtensionContext) {
             }).catch(error => service.error('更新千星奇域语言服务的工作区失败', error, 'force'));
         }),
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('miliastraLsp')) {
+            if (event.affectsConfiguration('miliastraLsp.window.statusBar')) {
                 updateStatus();
-                if (service.state === State.Running) {
-                    if (event.affectsConfiguration('miliastraLsp.color.mode')) {
-                        const feature = service.getFeature(SemanticTokensRegistrationType.method);
-                        const providers = new Set(vscode.workspace.textDocuments.map(document => feature.getProvider(document)));
-                        for (const provider of providers) {
-                            provider?.onDidChangeSemanticTokensEmitter.fire();
-                        }
-                    }
-                    void service.sendNotification('workspace/didChangeConfiguration', { settings: {} });
+            }
+            if (service.state !== State.Running) return;
+            if (event.affectsConfiguration('miliastraLsp.color.mode')) {
+                const feature = service.getFeature(SemanticTokensRegistrationType.method);
+                const providers = new Set(vscode.workspace.textDocuments.map(document => feature.getProvider(document)));
+                for (const provider of providers) {
+                    provider?.onDidChangeSemanticTokensEmitter.fire();
                 }
+            }
+            if (serverSettingSections.some(section => event.affectsConfiguration('miliastraLsp.' + section))) {
+                void service.sendNotification('workspace/didChangeConfiguration', { settings: null })
+                    .catch(error => service.error('更新千星奇域语言服务设置失败', error));
             }
         }));
     clientLifecycle = service.start();

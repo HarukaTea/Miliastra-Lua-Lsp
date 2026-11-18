@@ -17,8 +17,8 @@
 | 你的平台 | 安装包 |
 | --- | --- |
 | Windows x64 | `miliastra-win32-x64.vsix` |
-| macOS（Apple 芯片，ARM64） | `miliastra-darwin-arm64.vsix` |
-| Linux x64 | `miliastra-linux-x64.vsix` |
+| macOS 15.0 或更高版本，Apple 芯片（ARM64） | `miliastra-darwin-arm64.vsix` |
+| Linux x64，glibc 2.34 或更高版本，且系统 libstdc++ 提供 `GLIBCXX_3.4.30`（如 Ubuntu 22.04） | `miliastra-linux-x64.vsix` |
 
 ## 试一下控件补全
 
@@ -33,11 +33,11 @@ panel:SetVisible(true)
 
 ## 跨文件跳转和类型检查
 
-- 如果工作区里有 `ui/panel.lua`，用 `local panel = require("ui.panel")` 引入它，就能在调用处对它导出的字段按 **F12** 跳到定义。模块放在 `scripts/ui/panel.lua` 时，可在设置 `miliastraLsp.runtime.path` 的列表中追加 `scripts/?.lua`。
+- 如果工作区里有 `ui/panel.lua`，在 `require("ui.")` 的点号后可以补全 `panel`。也可以使用斜杠写成 `ui/panel`。引入模块后，在调用处对它导出的字段按 **F12** 就能跳到定义。模块放在 `scripts/ui/panel.lua` 时，在 `miliastraLsp.runtime.path` 中追加 `scripts/?.lua`，补全和跳转都会使用这个路径。
 - 自动导入已关闭：补全和快捷修复不会再自动生成 `require(...)`。手动编写的导入仍支持补全和跳转。
 - 默认关闭类型检查，减少动态 UI 字段和引擎运行时接口的误报；保留语法错误提示、补全和中文悬停。需要类型检查时，在脚本首行写上 `--!strict`，或在项目 `.luaurc` 中设置 `"languageMode": "strict"`。例如，把上面示例的 `true` 改成字符串 `"true"`，开启检查后就能在「问题」面板看到参数类型错误。
 - 默认隐藏 `LocalShadow`、`LocalUnused`、`SameLineStatement`、`ImplicitReturn`、`ComparisonPrecedence`、`FunctionUnused`、`UninitializedLocal` 和 `MultiLineStatement` 警告，保留未使用导入提示。需要重新开启时，在项目 `.luaurc` 的 `lint` 中将对应规则设为 `true` 即可。
-- 千星奇域脚本中的 `&`、`|`、`<<`、`>>` 等位运算也支持静态检查。要调整补全、诊断或内联类型提示，在 VS Code 设置中搜索 `miliastraLsp`。
+- 千星奇域脚本中的 `&`、`|`、`<<`、`>>` 等位运算也支持静态检查。解析器识别 Lua 5.3 十六进制浮点数（如 `0x1.8p1`），并检查 `goto` 的目标标签和局部变量作用域。要调整补全、诊断或内联类型提示，在 VS Code 设置中搜索 `miliastraLsp`。
 
 ## 常见问题
 

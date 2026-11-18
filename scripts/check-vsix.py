@@ -46,7 +46,7 @@ def check(package, root):
     script = workspace / "main.lua"
     source = """--!strict
 local panel = require("ui.panel")
-local mask = 1 << 2
+local mask = 0x1.8p1 << 2
 mask |= panel.id & 7
 local control = game.GetClientUIControl(mask)
 control:SetVisible((mask >> 1) ~= 0)
@@ -105,6 +105,9 @@ print(math.maxinteger, math.mininteger, math.type(1), math.tointeger("1"), math.
 print(math.isnan(0), math.isinf(1), math.atan(1, 2))
 print(debug.traceback())
 print(Enum.KeyboardKeyCode.CraftspersonKey1)
+if mask == 0 then goto ready end
+mask += 1
+::ready::
 return control
 """
     script.write_text(source, encoding="utf-8")
@@ -181,6 +184,14 @@ return control
         send("workspace/didChangeWatchedFiles", {"changes": [{"uri": module.as_uri(), "type": 1}]})
         restored = request(31, "textDocument/diagnostic", dict(textDocument=doc))
         assert not restored["items"], restored
+        for line, name in ((1, "ui.panel"), (15, "ui/panel")):
+            items = request(43, "textDocument/completion", cursor(line, name, 3))
+            path_range = {"start": cursor(line, name, 0)["position"], "end": cursor(line, name, len(name))["position"]}
+            assert any(i.get("textEdit") == {"range": path_range, "newText": name} for i in items), (name, items)
+        edits = request(45, "textDocument/rename", dict(cursor(2, "mask", 1), newName="flags"))["changes"]
+        assignments = [e for group in edits.values() for e in group if e["range"]["start"]["line"] == 3]
+        assert assignments == [{"range": {"start": {"line": 3, "character": 0},
+                                          "end": {"line": 3, "character": 4}}, "newText": "flags"}], assignments
         result = request(3, "textDocument/completion", cursor(5, "control:", len("control:")))
         items = result if isinstance(result, list) else result["items"]
         assert any(item["label"] == "SetVisible" for item in items)
@@ -284,20 +295,26 @@ assert(string.match("{", "[%{%}]"))
         hover = request(35, "textDocument/hover", dict(textDocument=ordinary, position={"line": 8, "character": 11}))
         assert "仅设置可见性" in hover["contents"]["value"], hover
         send("textDocument/didChange", {"textDocument": dict(ordinary, version=2),
-             "contentChanges": [{"text": ordinary_source + 'print(string.match("x", "%"))\nlocal broken = )\n'}]})
+             "contentChanges": [{"text": ordinary_source + 'print(string.match("x", "%"))\ngoto missingLabel\nlocal broken = )\n'}]})
         syntax_errors = request(36, "textDocument/diagnostic", dict(textDocument=ordinary))["items"]
-        assert any(e["message"].startswith("SyntaxError:") for e in syntax_errors), syntax_errors
+        parse_errors = [e for e in syntax_errors if e["message"].startswith("SyntaxError:")]
+        assert any(e["range"]["start"]["line"] == len(ordinary_source.splitlines()) + 2 for e in parse_errors), parse_errors
+        assert any("missingLabel" in e["message"] for e in parse_errors), parse_errors
         assert any(e["code"] == 18 for e in syntax_errors), syntax_errors
-        config = workspace / ".luaurc"
-        config.write_text('{"languageMode": "strict", "lint": {"FunctionUnused": true}}', encoding="utf-8")
-        send("workspace/didChangeWatchedFiles", {"changes": [{"uri": config.as_uri(), "type": 1}]})
         override = {"uri": (workspace / "override.lua").as_uri()}
         send("textDocument/didOpen", {"textDocument": dict(override, languageId="lua", version=1,
              text='local function OnInit() end\nfunction OnCustom() end\nfunction OnStart() end\ngame.GetClientUIControl("bad")')})
+        assert not request(46, "textDocument/diagnostic", dict(textDocument=override))["items"]
+        config = workspace / ".luaurc"
+        config.write_text('{"languageMode": "strict", "lint": {"FunctionUnused": true}}', encoding="utf-8")
+        send("workspace/didChangeWatchedFiles", {"changes": [{"uri": config.as_uri(), "type": 1}]})
         overridden = request(32, "textDocument/diagnostic", dict(textDocument=override))["items"]
         unused = [e["message"] for e in overridden if e["code"] == 8]
         assert len(unused) == 2 and any("'OnInit'" in m for m in unused) and any("'OnCustom'" in m for m in unused), overridden
         assert any(e["range"]["start"]["line"] == 3 and "number" in e["message"] for e in overridden), overridden
+        config.unlink()
+        send("workspace/didChangeWatchedFiles", {"changes": [{"uri": config.as_uri(), "type": 3}]})
+        assert not request(47, "textDocument/diagnostic", dict(textDocument=override))["items"]
         no_import = {"uri": (workspace / "no-import.lua").as_uri()}
         send("textDocument/didOpen", {"textDocument": dict(no_import, languageId="lua", version=1,
              text='--!strict\nprint(panel)\n')})

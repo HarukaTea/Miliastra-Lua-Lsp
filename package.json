@@ -234,7 +234,7 @@
 	"main": "./client/out/extension",
 	"name": "miliastraLsp",
 	"publisher": "HarukaTea",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"dependencies": {
 		"vscode-languageclient": "8.0.2"
 	},

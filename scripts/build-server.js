@@ -36,7 +36,9 @@ for (const [i, cwd] of [source, path.join(source, 'luau')].entries()) {
     }
 }
 const architecture = process.arch === 'arm64' ? 'arm64' : 'x86_64';
-const platformOptions = process.platform === 'darwin' ? ['-DCMAKE_OSX_ARCHITECTURES=' + architecture] : [];
+const platformOptions = process.platform === 'darwin'
+    ? ['-DCMAKE_OSX_ARCHITECTURES=' + architecture, '-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0']
+    : [];
 run('cmake', [...platformOptions, '-S', source, '-B', output, '-DCMAKE_BUILD_TYPE=Release',
     '-DLSP_STATIC_CRT=ON', '-DLSP_WERROR=OFF', '-DLUAU_BUILD_TESTS=OFF', '-DLUAU_BUILD_CLI=OFF'], root);
 run('cmake', ['--build', output, '--config', 'Release', '--target', 'Luau.LanguageServer.CLI', '--parallel',

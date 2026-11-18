@@ -38,7 +38,7 @@ index 7e13b3c..a54bb38 100644
                      ++configIt;
                  }
 diff --git a/src/LanguageServer.cpp b/src/LanguageServer.cpp
-index 4d8833e..823b60d 100644
+index 4d8833e..4296286 100644
 --- a/src/LanguageServer.cpp
 +++ b/src/LanguageServer.cpp
 @@ -53,20 +53,18 @@ WorkspaceFolderPtr LanguageServer::findWorkspace(const lsp::DocumentUri& file, b
@@ -65,17 +65,29 @@ index 4d8833e..823b60d 100644
          {
              bestWorkspace = workspace;
              length = size;
-@@ -765,6 +763,10 @@ void LanguageServer::onInitialized([[maybe_unused]] const lsp::InitializedParams
+@@ -765,11 +763,18 @@ void LanguageServer::onInitialized([[maybe_unused]] const lsp::InitializedParams
          if (!workspace->isReady)
              return;
  
-+        // A changed package.path can resolve every existing require to a different module.
-+        if (oldConfig && oldConfig->require.modulePaths != config.require.modulePaths)
+-        // Update the workspace setup with the new configuration
+-        workspace->setupWithConfiguration(config);
++        const bool indexChanged = !oldConfig || oldConfig->index.enabled != config.index.enabled || oldConfig->index.maxFiles != config.index.maxFiles ||
++            oldConfig->ignoreGlobs != config.ignoreGlobs || json(oldConfig->require) != json(config.require);
++        if (oldConfig && indexChanged)
 +            workspace->frontend.clear();
+
+-        // Refresh diagnostics
+-        workspace->recomputeDiagnostics(config);
++        const bool setupChanged = indexChanged || json(oldConfig->plugins) != json(config.plugins) || json(oldConfig->sourcemap) != json(config.sourcemap) ||
++            json(oldConfig->types) != json(config.types) || oldConfig->platform.type != config.platform.type;
++        if (setupChanged)
++            workspace->setupWithConfiguration(config);
 +
-         // Update the workspace setup with the new configuration
-         workspace->setupWithConfiguration(config);
++        if (setupChanged || json(oldConfig->diagnostics) != json(config.diagnostics))
++            workspace->recomputeDiagnostics(config);
  
+         // Refresh inlay hint if changed
+         if (!oldConfig || oldConfig->inlayHints != config.inlayHints)
 diff --git a/src/LuauExt.cpp b/src/LuauExt.cpp
 index 953ef01..2be43c8 100644
 --- a/src/LuauExt.cpp
@@ -179,18 +191,32 @@ index c438b5c..88b753c 100644
  }
  
 diff --git a/src/Workspace.cpp b/src/Workspace.cpp
-index a18c14c..445c550 100644
+index a18c14c..8b95026 100644
 --- a/src/Workspace.cpp
 +++ b/src/Workspace.cpp
-@@ -206,6 +206,7 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+@@ -206,6 +206,8 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
      std::vector<Luau::ModuleName> deletedModules;
      std::vector<Uri> deletedFiles;
      bool pluginFileChanged = false;
 +    bool moduleCreated = false;
++    bool projectConfigChanged = false;
  
      for (const auto& change : changes)
      {
-@@ -234,6 +235,12 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+@@ -213,11 +215,7 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+
+         if (change.uri.filename() == ".luaurc" || change.uri.filename() == ".robloxrc" || change.uri.filename() == ".config.luau")
+         {
+-            client->sendLogMessage(lsp::MessageType::Info, "Acknowledge config changed for workspace " + name + ", clearing configuration cache");
+-            fileResolver.clearConfigCache();
+-
+-            // Recompute diagnostics
+-            recomputeDiagnostics(config);
++            projectConfigChanged = true;
+         }
+         else if (change.uri.extension() == ".lua" || change.uri.extension() == ".luau")
+         {
+@@ -234,6 +232,12 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
  
              auto moduleName = fileResolver.getModuleName(change.uri);
  
@@ -203,18 +229,39 @@ index a18c14c..445c550 100644
              if (change.type == lsp::FileChangeType::Deleted)
              {
                  // Fully erase the module from the frontend's caches (including `sourceNodes`, which
-@@ -256,6 +263,11 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+@@ -250,18 +254,30 @@ void WorkspaceFolder::onDidChangeWatchedFiles(const std::vector<lsp::FileEvent>&
+         }
+     }
+
++    if (projectConfigChanged)
++        fileResolver.clearConfigCache();
++
+     if (pluginFileChanged)
+         reloadPlugins();
+
      if (!deletedModules.empty())
          frontend.clearModules(deletedModules);
  
-+    // A new file can satisfy an unresolved require or take precedence over its old target.
-+    if (moduleCreated)
++    // A new module can change require resolution. A project config can also change types and lint rules in cached modules.
++    if (moduleCreated || projectConfigChanged)
 +        for (const auto& [moduleName, node] : frontend.sourceNodes)
 +            frontend.markDirty(moduleName, &dirtyFiles);
 +
      // Parse require graph for files if indexing enable
      if (config.index.enabled && appliedFirstTimeConfiguration)
          frontend.parseModules(dirtyFiles);
+
+-    // Clear the diagnostics for files in case it was not managed
+-    clearDiagnosticsForFiles(deletedFiles);
++    if (projectConfigChanged)
++        recomputeDiagnostics(config);
++
++    // A config refresh already updates open documents; deleted files can still need explicit clearing.
++    if (!projectConfigChanged || !deletedFiles.empty())
++        clearDiagnosticsForFiles(deletedFiles);
+
+     client->sendWorkDoneProgressEnd(kWatchedFilesProgressToken);
+ }
 diff --git a/src/include/LSP/ClientConfiguration.hpp b/src/include/LSP/ClientConfiguration.hpp
 index 49653c8..95ab70f 100644
 --- a/src/include/LSP/ClientConfiguration.hpp
@@ -311,6 +358,41 @@ index b8d51ea..beeae97 100644
 -std::optional<Luau::TypeId> findCallMetamethod(Luau::TypeId type);
 \ No newline at end of file
 +std::optional<Luau::TypeId> findCallMetamethod(Luau::TypeId type);
+diff --git a/src/include/Platform/StringRequireSuggester.hpp b/src/include/Platform/StringRequireSuggester.hpp
+index ca0dc3b..2251e7c 100644
+--- a/src/include/Platform/StringRequireSuggester.hpp
++++ b/src/include/Platform/StringRequireSuggester.hpp
+@@ -4,6 +4,21 @@
+
+ #include <memory>
+
++// Lua package.path is searched template first, then relative to the script and the workspace.
++class RuntimeModulePaths
++{
++public:
++    RuntimeModulePaths(WorkspaceFileResolver& resolver, const Uri& script);
++    std::optional<Uri> base;
++    static bool accepts(const std::string& path);
++    std::optional<Uri> resolve(const std::string& path) const;
++    Luau::RequireSuggestions suggest(const std::string& path, const WorkspaceFolder& workspace) const;
++
++private:
++    WorkspaceFileResolver& resolver;
++    std::vector<std::pair<Uri, std::string>> searchPaths;
++};
++
+ class FileRequireNode : public Luau::RequireNode
+ {
+ public:
+@@ -54,6 +69,8 @@ public:
+
+ protected:
+     std::unique_ptr<Luau::RequireNode> getNode(const Luau::ModuleName& name) const override;
++    std::optional<Luau::RequireSuggestions> getRequireSuggestionsImpl(
++        const Luau::ModuleName& name, const std::optional<std::string>& path) const override;
+
+ private:
+     WorkspaceFolder* workspaceFolder;
 diff --git a/src/operations/CodeAction.cpp b/src/operations/CodeAction.cpp
 index d5fbfbd..f386293 100644
 --- a/src/operations/CodeAction.cpp
@@ -335,7 +417,7 @@ index d5fbfbd..f386293 100644
              UnknownSymbolFixContext ctx{
                  params.textDocument.uri,
 diff --git a/src/operations/Completion.cpp b/src/operations/Completion.cpp
-index c95d4d6..24d592e 100644
+index c95d4d6..5c36e79 100644
 --- a/src/operations/Completion.cpp
 +++ b/src/operations/Completion.cpp
 @@ -801,6 +801,9 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
@@ -348,7 +430,48 @@ index c95d4d6..24d592e 100644
          // If this entry is a non-function property, and we are autocompleting after a `:`
          // then hide it if configured to do so
          if (!config.completion.showPropertiesOnMethodCall && entry.kind == Luau::AutocompleteEntryKind::Property && entry.indexedWithSelf &&
-@@ -900,10 +903,20 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+@@ -864,24 +867,27 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+             if (entry.insertText)
+             {
+                 LUAU_ASSERT(!result.ancestry.empty());
+-                auto containingString = result.ancestry.back()->as<Luau::AstExprConstantString>();
+-                LUAU_ASSERT(containingString);
++                const auto* containingString = result.ancestry.back()->as<Luau::AstExprConstantString>();
++                if (!containingString)
++                    continue;
++                auto contents = containingString->location;
++                if (contents.begin.line != contents.end.line)
++                    continue; // LSP completion edits must fit on one line.
++                const unsigned delimiterWidth = containingString->quoteStyle == Luau::AstExprConstantString::QuoteStyle::QuotedRaw
++                    ? (contents.end.column - contents.begin.column - containingString->value.size) / 2
++                    : 1;
++                contents.begin.column += delimiterWidth;
++                contents.end.column -= delimiterWidth;
++                if (position < contents.begin || contents.end < position)
++                    continue;
+
+                 auto insertText = entry.insertText;
+                 if (!insertText->empty() && insertText->back() == '/')
+                     insertText->pop_back();
+
+-                item.textEdit = lsp::TextEdit{{params.position, textDocument->convertPosition(Luau::Position{
+-                                                                    containingString->location.end.line, containingString->location.end.column - 1})},
+-                    *insertText};
+-
+-                // TextEdit cannot replace the old text for some reason, so we need an additional edit
+-                item.additionalTextEdits.emplace_back(
+-                    lsp::TextEdit{{textDocument->convertPosition(
+-                                       Luau::Position{containingString->location.begin.line, containingString->location.begin.column + 1}),
+-                                      textDocument->convertPosition(
+-                                          Luau::Position{containingString->location.end.line, containingString->location.end.column - 1})},
+-                        ""});
++                // Replace and filter against the same path, including any directory prefix.
++                item.filterText = *insertText;
++                item.textEdit = lsp::TextEdit{textDocument->convertLocation(contents), *insertText};
+             }
+         }
+
+@@ -900,10 +906,20 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
                  // For some reason, the above text edit can't handle replacing the index operator
                  // Hence we remove it using an additional text edit
                  item.additionalTextEdits.emplace_back(lsp::TextEdit{
@@ -370,7 +493,7 @@ index c95d4d6..24d592e 100644
          // If autocompleting in a string and the autocompleting text contains a '/' character, then it won't replace correctly due to word boundaries
          // Apply a complete text edit instead
          if (name.find('/') != std::string::npos && result.context == Luau::AutocompleteContext::String &&
-@@ -922,27 +935,16 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+@@ -922,27 +938,16 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
          }
  
          // Handle parentheses suggestions
@@ -401,7 +524,7 @@ index c95d4d6..24d592e 100644
                      // Trigger Signature Help
                      item.command = lsp::Command{"Trigger Signature Help", "editor.action.triggerParameterHints"};
                  }
-@@ -951,12 +953,7 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+@@ -951,12 +956,7 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
              {
                  // We don't support snippets, so just add parentheses
                  if (entry.parens == Luau::ParenthesesRecommendation::CursorAfter || entry.parens == Luau::ParenthesesRecommendation::CursorInside)
@@ -415,7 +538,7 @@ index c95d4d6..24d592e 100644
              }
          }
  
-@@ -971,7 +968,8 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+@@ -971,7 +971,8 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
              {
                  // Compute label details and more detailed parentheses snippet
                  auto [detail, parenthesesSnippet] = computeLabelDetailsForFunction(entry, ftv);
@@ -425,7 +548,7 @@ index c95d4d6..24d592e 100644
  
                  // If we had CursorAfter, then the function call would not have any arguments
                  if (canUseSnippets(client->capabilities) && config.completion.addParentheses && config.completion.fillCallArguments &&
-@@ -980,17 +978,23 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
+@@ -980,17 +981,23 @@ std::vector<lsp::CompletionItem> WorkspaceFolder::completion(const lsp::Completi
                      if (config.completion.addTabstopAfterParentheses)
                          parenthesesSnippet += "$0";
  
@@ -504,6 +627,36 @@ index 388008c..8a0860f 100644
                  {nlohmann::json(uri.toString()), nlohmann::json(pos)},
              };
          }
+diff --git a/src/operations/Rename.cpp b/src/operations/Rename.cpp
+index f56c04f..c966090 100644
+--- a/src/operations/Rename.cpp
++++ b/src/operations/Rename.cpp
+@@ -2,6 +2,8 @@
+
+ #include "Luau/AstQuery.h"
+ #include "LSP/LuauExt.hpp"
++#include <algorithm>
++#include <tuple>
+
+ static std::optional<Luau::Binding> getBinding(
+     const WorkspaceFolder* workspaceFolder, const Luau::ModuleName& moduleName, const Luau::Position& position)
+@@ -147,5 +149,16 @@ lsp::RenameResult WorkspaceFolder::rename(const lsp::RenameParams& params, const
+         result.changes.at(reference.uri).emplace_back(lsp::TextEdit{editRange, params.newName});
+     }
+
++    // Lowered compound bit assignments can visit the same source operand twice.
++    // Workspace edits must contain only one replacement per source range.
++    for (auto& [uri, edits] : result.changes)
++    {
++        std::sort(edits.begin(), edits.end(), [](const auto& a, const auto& b) {
++            return std::tie(a.range.start, a.range.end) < std::tie(b.range.start, b.range.end);
++        });
++        edits.erase(std::unique(edits.begin(), edits.end(), [](const auto& a, const auto& b) {
++            return a.range == b.range;
++        }), edits.end());
++    }
+     return result;
+ }
 diff --git a/src/operations/SemanticTokens.cpp b/src/operations/SemanticTokens.cpp
 index 1a80b7e..8f83f51 100644
 --- a/src/operations/SemanticTokens.cpp
@@ -561,34 +714,205 @@ index 8e92296..3049ae6 100644
      if (!candidate)
          return std::nullopt;
 diff --git a/src/platform/LSPPlatform.cpp b/src/platform/LSPPlatform.cpp
-index d1e1b6f..eac04b6 100644
+index d1e1b6f..3b8be38 100644
 --- a/src/platform/LSPPlatform.cpp
 +++ b/src/platform/LSPPlatform.cpp
-@@ -153,6 +153,27 @@ std::optional<Luau::ModuleInfo> LSPPlatform::resolveStringRequire(
-             return std::nullopt;
+@@ -138,21 +138,16 @@ std::optional<Luau::ModuleInfo> LSPPlatform::resolveStringRequire(
+     if (!contextPath)
+         return std::nullopt;
+
+-    auto baseUri = contextPath->parent();
++    RuntimeModulePaths modulePaths(*fileResolver, *contextPath);
++    auto baseUri = modulePaths.base;
+     if (!baseUri)
+         return std::nullopt;
+
+-    ClientConfiguration clientConfig;
+-    if (fileResolver->client)
+-        clientConfig = fileResolver->client->getConfiguration(fileResolver->rootUri);
+-
+-    if (isInitLuauFile(*contextPath) && !clientConfig.require.useOriginalRequireByStringSemantics)
++    if (!requiredString.empty() && RuntimeModulePaths::accepts(requiredString))
+     {
+-        baseUri = baseUri->parent();
+-        if (!baseUri)
+-            return std::nullopt;
++        if (auto target = modulePaths.resolve(requiredString))
++            return Luau::ModuleInfo{fileResolver->getModuleName(*target)};
      }
- 
-+    // Lua package.path templates also accept module names such as "ui/panel".
-+    // Explicit paths and @aliases continue through the standard Luau resolver below.
-+    const bool explicitPath = Luau::FileUtils::isAbsolutePath(requiredString) || Luau::startsWith(requiredString, "./") ||
-+        Luau::startsWith(requiredString, "../") || Luau::startsWith(requiredString, ".\\") || Luau::startsWith(requiredString, "..\\");
-+    if (!requiredString.empty() && !explicitPath && requiredString.front() != '@' &&
-+        !endsWith(requiredString, ".lua") && !endsWith(requiredString, ".luau"))
-+    {
-+        std::string module = requiredString;
-+        std::replace(module.begin(), module.end(), '.', '/');
-+        for (auto pattern : clientConfig.require.modulePaths)
-+        {
-+            for (size_t pos = pattern.find('?'); pos != std::string::npos; pos = pattern.find('?', pos + module.size()))
-+                pattern.replace(pos, 1, module);
-+            for (const Uri* root : {&*baseUri, &fileResolver->rootUri})
-+            {
-+                Uri candidate = root->resolvePath(pattern);
-+                if (fileResolver->getTextDocument(candidate) || candidate.isFile())
-+                    return Luau::ModuleInfo{fileResolver->getModuleName(candidate)};
-+            }
-+        }
-+    }
+-
      auto fileUri = baseUri->resolvePath(requiredString);
  
      auto luauConfig = fileResolver->getConfig(context->name, limits);
+diff --git a/src/platform/StringRequireSuggester.cpp b/src/platform/StringRequireSuggester.cpp
+index bd9c040..3183ed6 100644
+--- a/src/platform/StringRequireSuggester.cpp
++++ b/src/platform/StringRequireSuggester.cpp
+@@ -2,8 +2,132 @@
+ #include "Luau/FileResolver.h"
+ #include "Platform/StringRequireSuggester.hpp"
+ #include "LSP/Workspace.hpp"
++#include "LSP/Utils.hpp"
+ #include "LuauFileUtils.hpp"
+
++RuntimeModulePaths::RuntimeModulePaths(WorkspaceFileResolver& resolver, const Uri& script)
++    : base(script.parent())
++    , resolver(resolver)
++{
++    ClientRequireConfiguration config;
++    if (resolver.client)
++        config = resolver.client->getConfiguration(resolver.rootUri).require;
++    if (base && isInitLuauFile(script) && !config.useOriginalRequireByStringSemantics)
++        base = base->parent();
++    if (!base)
++        return;
++    for (auto& pattern : config.modulePaths)
++    {
++        std::replace(pattern.begin(), pattern.end(), '\\', '/');
++        searchPaths.emplace_back(*base, pattern);
++        if (*base != resolver.rootUri && !Luau::FileUtils::isAbsolutePath(pattern))
++            searchPaths.emplace_back(resolver.rootUri, pattern);
++    }
++}
++
++bool RuntimeModulePaths::accepts(const std::string& path)
++{
++    return path.empty() || (path.front() != '@' && !Luau::FileUtils::isAbsolutePath(path) &&
++        !Luau::startsWith(path, "./") && !Luau::startsWith(path, "../") && !Luau::startsWith(path, ".\\") &&
++        !Luau::startsWith(path, "..\\") && !endsWith(path, ".lua") && !endsWith(path, ".luau"));
++}
++
++static std::string expandModulePath(std::string pattern, const std::string& module)
++{
++    for (size_t pos = pattern.find('?'); pos != std::string::npos; pos = pattern.find('?', pos + module.size()))
++        pattern.replace(pos, 1, module);
++    return pattern;
++}
++
++static std::string moduleDirectoryPath(std::string path)
++{
++    std::replace(path.begin(), path.end(), '.', '/');
++    std::replace(path.begin(), path.end(), '\\', '/');
++    return path;
++}
++
++std::optional<Uri> RuntimeModulePaths::resolve(const std::string& path) const
++{
++    const auto module = moduleDirectoryPath(path);
++    for (const auto& [root, pattern] : searchPaths)
++    {
++        auto candidate = root.resolvePath(expandModulePath(pattern, module));
++        if (resolver.getTextDocument(candidate) || candidate.isFile())
++            return candidate;
++    }
++    return std::nullopt;
++}
++
++// Invert a single filename component, including templates where '?' occurs more than once.
++static std::optional<std::string> matchModuleComponent(const std::string& pattern, const std::string& filename)
++{
++    const auto count = static_cast<size_t>(std::count(pattern.begin(), pattern.end(), '?'));
++    const auto fixed = pattern.size() - count;
++    if (filename.size() <= fixed || (filename.size() - fixed) % count != 0)
++        return std::nullopt;
++    auto name = filename.substr(pattern.find('?'), (filename.size() - fixed) / count);
++    return expandModulePath(pattern, name) == filename ? std::optional(name) : std::nullopt;
++}
++
++Luau::RequireSuggestions RuntimeModulePaths::suggest(const std::string& path, const WorkspaceFolder& workspace) const
++{
++    const auto separator = path.find_last_of("./\\");
++    const std::string prefix = path.substr(0, separator + 1);
++    const std::string typed = path.substr(prefix.size());
++    const auto moduleDir = moduleDirectoryPath(prefix);
++    Luau::RequireSuggestions results;
++    std::unordered_set<std::string> files, folders;
++    std::unordered_map<Uri, std::vector<std::pair<std::string, bool>>, UriHash> entries;
++
++    for (const auto& [root, pattern] : searchPaths)
++    {
++        // The first '?' identifies the only directory that must be listed for this component.
++        // The rest of the template is checked against the real target (e.g. ?/init.lua or ?/?.lua).
++        const auto partialPattern = expandModulePath(pattern, moduleDir + "?");
++        const auto wildcard = partialPattern.find('?');
++        if (wildcard == std::string::npos)
++            continue;
++        const auto start = partialPattern.rfind('/', wildcard) + 1;
++        const auto end = partialPattern.find('/', wildcard);
++        const auto component = partialPattern.substr(start, end - start);
++        const auto fixedPrefix = partialPattern.substr(start, wildcard - start);
++        const auto directory = root.resolvePath(partialPattern.substr(0, start));
++        auto [it, added] = entries.try_emplace(directory);
++        auto& children = it->second;
++        if (added && directory.isDirectory())
++            Luau::FileUtils::traverseDirectory(directory.fsPath(), [&](const std::string& child) {
++                auto uri = Uri::file(child);
++                if (!workspace.isIgnoredFileForAutoImports(uri))
++                    children.emplace_back(uri.filename(), uri.isDirectory());
++            });
++
++        for (const auto& [filename, isDirectory] : children)
++        {
++            if (!Luau::startsWith(filename, fixedPrefix + typed))
++                continue;
++            if (isDirectory)
++            {
++                // A directory can also be the beginning of a longer module name.
++                const auto child = filename.substr(fixedPrefix.size());
++                if (!child.empty() && child.find('.') == std::string::npos)
++                    folders.insert(child);
++            }
++            auto name = matchModuleComponent(component, filename);
++            if (!name || name->find('.') != std::string::npos || !Luau::startsWith(*name, typed) || files.count(*name))
++                continue;
++            const auto target = root.resolvePath(expandModulePath(pattern, moduleDir + *name));
++            if (resolver.getTextDocument(target) || target.isFile())
++            {
++                files.insert(*name);
++                results.push_back({*name, prefix + *name, {"File"}});
++            }
++        }
++    }
++    for (const auto& name : folders)
++        if (!files.count(name))
++            results.push_back({name, prefix + name, {"Directory"}});
++    return results;
++}
+ 
+ std::string FileRequireNode::getLabel() const
+ {
+@@ -52,6 +176,8 @@ std::unique_ptr<Luau::RequireNode> FileRequireNode::resolvePathToNode(const std:
+     else
+         relativeNodeUri = basePath->resolvePath(requireString);
+
++    if (!relativeNodeUri.exists())
++        return nullptr; // Let the caller retry the parent of a partially typed path.
+     return std::make_unique<FileRequireNode>(relativeNodeUri, relativeNodeUri.isDirectory(), workspaceFolder);
+ }
+
+@@ -105,3 +231,25 @@ std::unique_ptr<Luau::RequireNode> StringRequireSuggester::getNode(const Luau::M
+
+     return nullptr;
+ }
++
++std::optional<Luau::RequireSuggestions> StringRequireSuggester::getRequireSuggestionsImpl(
++    const Luau::ModuleName& name, const std::optional<std::string>& path) const
++{
++    auto standard = Luau::RequireSuggester::getRequireSuggestionsImpl(name, path);
++    if (!path || !RuntimeModulePaths::accepts(*path) || *path == "." || *path == "..")
++        return standard;
++    auto script = platform->resolveToRealPath(name);
++    if (!script)
++        return standard;
++    auto results = RuntimeModulePaths(workspaceFolder->fileResolver, *script).suggest(*path, *workspaceFolder);
++    if (standard)
++    {
++        std::unordered_set<std::string> paths;
++        for (const auto& item : results)
++            paths.insert(item.fullPath);
++        for (auto& item : *standard)
++            if (paths.insert(item.fullPath).second)
++                results.push_back(std::move(item));
++    }
++    return results;
++}
